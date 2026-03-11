@@ -20,7 +20,7 @@ contract DeployToken is Script {
         vm.startBroadcast();
 
         bytes memory data = abi.encodeWithSelector(RwaUsd.initialize.selector, admin);
-        RwaUsd proxy = RwaUsd(0xf608F0cBf2A4E214E01E973e192E1690E0f2652b);
+        address proxy = Upgrades.deployUUPSProxy("RwaUsd.sol", data);
 
         console.log("Deployed rwausd proxy at:", proxy);
         console.log("Admin:", admin);
