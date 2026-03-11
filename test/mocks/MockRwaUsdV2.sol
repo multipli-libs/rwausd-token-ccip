@@ -56,7 +56,7 @@ contract MockRwaUsdV2 is BurnMintERC20Upgradeable, UUPSUpgradeable {
      * @dev Passes dummy values to BurnMintERC20; real state is set in initialize()
      * @custom:security _disableInitializers prevents direct initialization of the implementation
      */
-     /// @custom:oz-upgrades-unsafe-allow constructor
+    /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
@@ -192,7 +192,7 @@ contract MockRwaUsdV2 is BurnMintERC20Upgradeable, UUPSUpgradeable {
     }
 
     //new methods
-        uint256 public newVariable;
+    uint256 public newVariable;
 
     function newMethod() public pure returns (string memory) {
         return "new method";
