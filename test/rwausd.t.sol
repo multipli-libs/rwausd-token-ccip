@@ -26,7 +26,6 @@ contract RwaUsdTest is Test {
         token = RwaUsd(address(proxy));
         vm.stopPrank();
 
-        // Grant minter and burner roles
         vm.startPrank(admin);
         token.grantRole(token.MINTER_ROLE(), minter);
         token.grantRole(token.BURNER_ROLE(), burner);
@@ -84,7 +83,7 @@ contract RwaUsdTest is Test {
      */
     function test_upgrade_SuccessWhenCalledByAdmin() public {
         vm.startPrank(admin);
-    
+
         Upgrades.upgradeProxy(address(token), "MockRwaUsdV2.sol", "");
         vm.stopPrank();
 
@@ -92,9 +91,6 @@ contract RwaUsdTest is Test {
         assertEq(response, "new method");
     }
 
-    /**
-     * @notice New implementation can set and read new storage variables
-     */
     function test_upgrade_NewStorageVariableWorks() public {
         vm.startPrank(admin);
         Upgrades.upgradeProxy(address(token), "MockRwaUsdV2.sol", "");
@@ -102,7 +98,6 @@ contract RwaUsdTest is Test {
         MockRwaUsdV2 tokenV2 = MockRwaUsdV2(address(token));
         tokenV2.setNewVariable(42);
         assertEq(tokenV2.newVariable(), 42);
-        vm.stopPrank();
     }
 
     function test_upgrade_RevertsWhenCalledByNonAdmin() public {
@@ -123,5 +118,29 @@ contract RwaUsdTest is Test {
         Upgrades.upgradeProxy(address(token), "MockRwaUsdV2.sol", "");
 
         assertEq(token.balanceOf(alice), 100e18);
+    }
+
+    function test_upgrade_AdminRolePreserved() public {
+        vm.startPrank(admin);
+        Upgrades.upgradeProxy(address(token), "MockRwaUsdV2.sol:MockRwaUsdV2", "");
+        vm.stopPrank();
+
+        assertTrue(MockRwaUsdV2(address(token)).hasRole(token.DEFAULT_ADMIN_ROLE(), admin));
+    }
+
+    function test_upgrade_CcipAdminPreserved() public {
+        vm.startPrank(admin);
+        Upgrades.upgradeProxy(address(token), "MockRwaUsdV2.sol:MockRwaUsdV2", "");
+        vm.stopPrank();
+
+        assertEq(MockRwaUsdV2(address(token)).getCCIPAdmin(), admin);
+    }
+
+    function test_upgrade_MinterRolePreserved() public {
+        vm.startPrank(admin);
+        Upgrades.upgradeProxy(address(token), "MockRwaUsdV2.sol:MockRwaUsdV2", "");
+        vm.stopPrank();
+
+        assertTrue(MockRwaUsdV2(address(token)).hasRole(token.MINTER_ROLE(), minter));
     }
 }

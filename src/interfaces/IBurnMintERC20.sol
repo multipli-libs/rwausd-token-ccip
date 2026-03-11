@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-interface IBurnMintERC20 is IERC20Upgradeable {
+interface IBurnMintERC20 is IERC20 {
     /// @notice Mints new tokens for a given address.
     /// @param account The address to mint the new tokens to.
     /// @param amount The number of tokens to be minted.
