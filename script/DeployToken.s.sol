@@ -2,52 +2,37 @@
 pragma solidity 0.8.24;
 
 import {Script, console} from "forge-std/Script.sol";
-import {HelperUtils} from "./utils/HelperUtils.s.sol"; // Utility functions for JSON parsing and chain info
-import {ChainNameResolver} from "./utils/ChainNameResolver.s.sol"; // Chain name resolution utility
-import {BurnMintERC20} from "@chainlink/contracts/src/v0.8/shared/token/ERC20/BurnMintERC20.sol";
+import {HelperUtils} from "./utils/HelperUtils.s.sol";
+import {ChainNameResolver} from "./utils/ChainNameResolver.s.sol";
+import {RwaUsd} from "src/token/RwaUsd.sol";
+import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 
 contract DeployToken is Script {
     function run() external {
         ChainNameResolver resolver = new ChainNameResolver();
-        // Get the chain name based on the current chain ID
         string memory chainName = resolver.getChainNameSafe(block.chainid);
 
-        // Define the path to the config.json file
         string memory root = vm.projectRoot();
         string memory configPath = string.concat(root, "/script/config.json");
 
-        // Extract token parameters from the config.json file
-        string memory name = HelperUtils.getStringFromJson(vm, configPath, ".rwaUSDToken.name");
-        string memory symbol = HelperUtils.getStringFromJson(vm, configPath, ".rwaUSDToken.symbol");
-        uint8 decimals = uint8(HelperUtils.getUintFromJson(vm, configPath, ".rwaUSDToken.decimals"));
-        uint256 maxSupply = HelperUtils.getUintFromJson(vm, configPath, ".rwaUSDToken.maxSupply");
-        uint256 preMint = HelperUtils.getUintFromJson(vm, configPath, ".rwaUSDToken.preMint");
+        address admin = HelperUtils.getAddressFromJson(vm, configPath, ".rwaUSDToken.ccipAdminAddress");
 
         vm.startBroadcast();
 
-        address deployer = msg.sender;
-        address tokenAddress;
+        bytes memory data = abi.encodeWithSelector(RwaUsd.initialize.selector, admin);
+        RwaUsd proxy = RwaUsd(0xf608F0cBf2A4E214E01E973e192E1690E0f2652b);
 
-        BurnMintERC20 token = new BurnMintERC20(name, symbol, decimals, maxSupply, preMint);
-        tokenAddress = address(token);
-        console.log("Deployed BurnMintERC20 at:", tokenAddress);
-
-        // Grant mint and burn roles to the deployer address
-        BurnMintERC20(tokenAddress).grantMintAndBurnRoles(deployer);
-        console.log("Granted mint and burn roles to:", deployer);
+        console.log("Deployed rwausd proxy at:", proxy);
+        console.log("Admin:", admin);
 
         vm.stopBroadcast();
 
-        // Prepare to write the deployed token address to a JSON file
         string memory jsonObj = "internal_key";
         string memory key = string(abi.encodePacked("deployedToken_", chainName));
-        string memory finalJson = vm.serializeAddress(jsonObj, key, tokenAddress);
+        string memory finalJson = vm.serializeAddress(jsonObj, key, proxy);
 
-        // Define the output file path for the deployed token address
         string memory fileName = string(abi.encodePacked("./script/output/deployedToken_", chainName, ".json"));
         console.log("Writing deployed token address to file:", fileName);
-
-        // Write the JSON file containing the deployed token address
         vm.writeJson(finalJson, fileName);
     }
 }
