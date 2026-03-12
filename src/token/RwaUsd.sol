@@ -41,10 +41,7 @@ contract RwaUsd is BurnMintERC20Upgradeable, UUPSUpgradeable {
     }
 
     /// @custom:oz-upgrades-unsafe-allow missing-initializer-call
-    function __RwaUsd_init_unchained(address admin_) internal onlyInitializing {
-        _grantRole(DEFAULT_ADMIN_ROLE, admin_);
-        if (msg.sender != admin_) _revokeRole(DEFAULT_ADMIN_ROLE, msg.sender);
-    }
+    function __RwaUsd_init_unchained(address admin_) internal onlyInitializing {}
 
     /**
      * @notice Authorizes a contract upgrade (UUPS pattern)

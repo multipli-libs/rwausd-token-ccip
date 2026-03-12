@@ -7,7 +7,9 @@ import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol"
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import {ERC20BurnableUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
+import {
+    ERC20BurnableUpgradeable
+} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
 
 /// @notice Upgradeable version of BurnMintERC20.
 contract BurnMintERC20Upgradeable is
@@ -34,7 +36,7 @@ contract BurnMintERC20Upgradeable is
 
     /// @dev keccak256(abi.encode(uint256(keccak256("burnminterc20.storage.BurnMintERC20Storage")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 private constant BURN_MINT_ERC20_STORAGE_SLOT =
-       0x9d50aa6d2a9beb43604b360b2b318af4a5163378f001e45a83887b785af66300;
+        0x48733b579cb8ee0f498a5cd23cb2e466f92e044f7077bd86ce4fff1c306c0100;
 
     function _getBurnMintStorage() private pure returns (BurnMintERC20Storage storage $) {
         assembly {
@@ -135,6 +137,7 @@ contract BurnMintERC20Upgradeable is
     }
 
     function setCCIPAdmin(address newAdmin) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (newAdmin == address(0)) revert InvalidRecipient(address(0));
         BurnMintERC20Storage storage $ = _getBurnMintStorage();
         address currentAdmin = $.ccipAdmin;
         $.ccipAdmin = newAdmin;
