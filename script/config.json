@@ -3,7 +3,7 @@
     "name": "Real World Asset USD",
     "symbol": "rwaUSD",
     "decimals": 18,
-    "maxSupply": 500000000000000000000000,
+    "maxSupply": 0,
     "preMint": 0,
     "ccipAdminAddress": "0x928786CD018d7615738dBA48462Be6B57384ddd4"
   },
