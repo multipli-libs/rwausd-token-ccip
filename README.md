@@ -8,23 +8,24 @@ Find a list of available tutorials on the Chainlink documentation: [Cross-Chain 
 
 1. [Setup](#setup)
 2. [RwaUsd Token (Upgradeable)](#rwausd-token-upgradeable)
-3. [AcceptAdminRole](#acceptadminrole)
-4. [AddRemotePool](#addremotepool)
-5. [ApplyChainUpdates](#applychainupdates)
-6. [ClaimAdmin](#claimadmin)
-7. [DeployBurnMintTokenPool](#deployburnminttokenpool)
-8. [DeployLockReleaseTokenPool](#deploylockreleasetokenpool)
-9. [DeployToken](#deploytoken)
-10. [GetCurrentRateLimits](#getcurrentratelimits)
-11. [GetPoolConfig](#getpoolconfig)
-12. [MintTokens](#minttokens)
-13. [RemoveRemotePool](#removeremotepool)
-14. [SetPool](#setpool)
-15. [SetRateLimitAdmin](#setratelimitadmin)
-16. [TransferTokenAdminRole](#transfertokenadminrole)
-17. [TransferTokens](#transfertokens)
-18. [UpdateAllowList](#updateallowlist)
-19. [UpdateRateLimiters](#updateratelimiters)
+3. [Testing](#testing)
+4. [AcceptAdminRole](#acceptadminrole)
+5. [AddRemotePool](#addremotepool)
+6. [ApplyChainUpdates](#applychainupdates)
+7. [ClaimAdmin](#claimadmin)
+8. [DeployBurnMintTokenPool](#deployburnminttokenpool)
+9. [DeployLockReleaseTokenPool](#deploylockreleasetokenpool)
+10. [DeployToken](#deploytoken)
+11. [GetCurrentRateLimits](#getcurrentratelimits)
+12. [GetPoolConfig](#getpoolconfig)
+13. [MintTokens](#minttokens)
+14. [RemoveRemotePool](#removeremotepool)
+15. [SetPool](#setpool)
+16. [SetRateLimitAdmin](#setratelimitadmin)
+17. [TransferTokenAdminRole](#transfertokenadminrole)
+18. [TransferTokens](#transfertokens)
+19. [UpdateAllowList](#updateallowlist)
+20. [UpdateRateLimiters](#updateratelimiters)
 
 ---
 
@@ -212,7 +213,34 @@ Only the address holding `DEFAULT_ADMIN_ROLE` can authorize upgrades.
 
 ---
 
-## 3. AcceptAdminRole
+## 3. Testing
+
+### Overview
+
+The test suite covers `RwaUsd` initialization, access control, UUPS upgradeability, and ERC-7201 namespaced storage integrity. All tests run with Foundry and require no live network connection.
+
+### Prerequisites
+
+Install dependencies before running tests:
+
+```bash
+npm install
+forge install
+```
+
+### Running the full test suite
+
+```bash
+forge test
+```
+
+For verbose output showing each test name and any revert reasons:
+
+```bash
+forge test -vvv
+```
+
+## 4. AcceptAdminRole
 
 ### Description
 
@@ -249,7 +277,7 @@ This will:
 
 ---
 
-## 4. AddRemotePool
+## 5. AddRemotePool
 
 ### Description
 
@@ -285,7 +313,7 @@ forge script script/AddRemotePool.s.sol --rpc-url $RPC_URL_FUJI --private-key $P
 
 ---
 
-## 5. ApplyChainUpdates
+## 6. ApplyChainUpdates
 
 ### Description
 
@@ -318,7 +346,7 @@ forge script script/ApplyChainUpdates.s.sol --rpc-url $RPC_URL_FUJI --private-ke
 
 ---
 
-## 6. ClaimAdmin
+## 7. ClaimAdmin
 
 ### Description
 
@@ -347,7 +375,7 @@ forge script script/ClaimAdmin.s.sol --rpc-url $RPC_URL_FUJI --private-key $PRIV
 
 ---
 
-## 7. DeployBurnMintTokenPool
+## 8. DeployBurnMintTokenPool
 
 ### Description
 
@@ -376,7 +404,7 @@ forge script script/DeployBurnMintTokenPool.s.sol --rpc-url $RPC_URL_FUJI --priv
 
 ---
 
-## 8. DeployLockReleaseTokenPool
+## 9. DeployLockReleaseTokenPool
 
 ### Description
 
@@ -401,7 +429,7 @@ forge script script/DeployLockReleaseTokenPool.s.sol --rpc-url $RPC_URL_FUJI --p
 
 ---
 
-## 9. DeployToken
+## 10. DeployToken
 
 ### Description
 
@@ -448,7 +476,7 @@ forge script script/DeployToken.s.sol \
 
 ---
 
-## 10. GetCurrentRateLimits
+## 11. GetCurrentRateLimits
 
 ### Description
 
@@ -477,7 +505,7 @@ forge script script/GetCurrentRateLimits.s.sol:GetCurrentRateLimits \
 
 ---
 
-## 11. GetPoolConfig
+## 12. GetPoolConfig
 
 ### Description
 
@@ -508,7 +536,7 @@ forge script script/GetPoolConfig.s.sol:GetPoolConfig \
 
 ---
 
-## 12. MintTokens
+## 13. MintTokens
 
 ### Description
 
@@ -533,7 +561,7 @@ forge script script/MintTokens.s.sol --rpc-url $RPC_URL_FUJI --private-key $PRIV
 
 ---
 
-## 13. RemoveRemotePool
+## 14. RemoveRemotePool
 
 ### Description
 
@@ -566,7 +594,7 @@ forge script script/RemoveRemotePool.s.sol --rpc-url $RPC_URL_FUJI --private-key
 
 ---
 
-## 14. SetPool
+## 15. SetPool
 
 ### Description
 
@@ -592,7 +620,7 @@ forge script script/SetPool.s.sol --rpc-url $RPC_URL_FUJI --private-key $PRIVATE
 
 ---
 
-## 15. SetRateLimitAdmin
+## 16. SetRateLimitAdmin
 
 ### Description
 
@@ -621,7 +649,7 @@ forge script script/SetRateLimitAdmin.s.sol --rpc-url $RPC_URL_FUJI --private-ke
 
 ---
 
-## 16. TransferTokenAdminRole
+## 17. TransferTokenAdminRole
 
 ### Description
 
@@ -656,7 +684,7 @@ forge script script/TransferTokenAdminRole.s.sol --rpc-url $RPC_URL_FUJI --priva
 
 ---
 
-## 17. TransferTokens
+## 18. TransferTokens
 
 ### Description
 
@@ -683,7 +711,7 @@ forge script script/TransferTokens.s.sol --rpc-url $RPC_URL_FUJI --private-key $
 
 ---
 
-## 18. UpdateAllowList
+## 19. UpdateAllowList
 
 ### Description
 
@@ -719,7 +747,7 @@ forge script script/UpdateAllowList.s.sol --rpc-url $RPC_URL_FUJI --private-key 
 
 ---
 
-## 19. UpdateRateLimiters
+## 20. UpdateRateLimiters
 
 ### Description
 
