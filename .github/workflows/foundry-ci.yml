@@ -1,5 +1,7 @@
 name: CI
 
+permissions: {}
+
 on:
   push:
   pull_request:
@@ -15,10 +17,19 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
           submodules: recursive
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install npm dependencies
+        run: npm ci
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
@@ -33,4 +44,4 @@ jobs:
         run: forge build --sizes
 
       - name: Run Forge tests
-        run: forge test
+        run: forge test -vvv
