@@ -42,7 +42,7 @@ Example `config.json` file:
     "name": "Real World Asset USD",
     "symbol": "rwaUSD",
     "decimals": 18,
-    "maxSupply": 500000000000000000000000,
+    "maxSupply": 0, //Unlimited supply
     "preMint": 0,
     "ccipAdminAddress": "0x928786CD018d7615738dBA48462Be6B57384ddd4"
   },
@@ -185,7 +185,6 @@ function __BurnMintERC20_init(
 ```bash
 forge script script/DeployToken.s.sol \
   --rpc-url $RPC_URL_SEPOLIA \
-  --fork-url $RPC_URL_SEPOLIA \
   --private-key $PRIVATE_KEY \
   --broadcast \
   --verify
@@ -413,13 +412,10 @@ Deploys the `RwaUsd` upgradeable token contract via a UUPS proxy. Reads the admi
 ```bash
 forge script script/DeployToken.s.sol \
   --rpc-url $RPC_URL \
-  --fork-url $RPC_URL \
   --private-key $PRIVATE_KEY \
   --broadcast \
   --verify
 ```
-
-> **Note**: Both `--rpc-url` and `--fork-url` are required. The OZ upgrades plugin uses `--fork-url` for upgrade safety validation simulations.
 
 ### Config Parameters
 
@@ -440,7 +436,6 @@ The script reads from `config.json`:
 ```bash
 forge script script/DeployToken.s.sol \
   --rpc-url $RPC_URL_SEPOLIA \
-  --fork-url $RPC_URL_SEPOLIA \
   --private-key $PRIVATE_KEY \
   --broadcast \
   --verify
