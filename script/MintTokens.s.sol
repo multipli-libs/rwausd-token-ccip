@@ -14,7 +14,7 @@ contract MintTokens is Script {
 
         // Construct paths to the configuration and token JSON files
         string memory root = vm.projectRoot();
-        string memory configPath = string.concat(root, "/script/config.json");
+        string memory configPath = vm.envOr("CONFIG_PATH", string.concat(root, "/script/config.json"));
         string memory tokenPath = string.concat(root, "/script/output/deployedToken_", chainName, ".json");
 
         // Extract the token address from the JSON file

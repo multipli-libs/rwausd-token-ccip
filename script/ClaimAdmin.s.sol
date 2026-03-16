@@ -19,7 +19,7 @@ contract ClaimAdmin is Script {
         // Define paths to the necessary JSON files
         string memory root = vm.projectRoot();
         string memory deployedTokenPath = string.concat(root, "/script/output/deployedToken_", chainName, ".json");
-        string memory configPath = string.concat(root, "/script/config.json");
+        string memory configPath = vm.envOr("CONFIG_PATH", string.concat(root, "/script/config.json"));
 
         // Extract values from the JSON files
         address tokenAddress =

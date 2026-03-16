@@ -38,7 +38,7 @@ Find a list of available tutorials on the Chainlink documentation: [Cross-Chain 
 Make sure you have Node.js v22.10.0 or above installed. Optionally, you can use [nvm](https://github.com/nvm-sh/nvm) to manage Node.js versions:
 
 ```bash
-nvm use 22
+nvm use 22 # if you are using nvm
 ```
 
 Verify the correct version is installed:
@@ -67,8 +67,8 @@ If you haven't already, install Foundry by following the [Foundry documentation]
 Clone the repository and navigate to the project directory:
 
 ```bash
-git clone https://github.com/smartcontractkit/smart-contract-examples.git
-cd smart-contract-examples/ccip/cct/foundry
+git clone https://github.com/multipli-finance/rwausd-token-ccip
+cd rwausd-token-ccip
 ```
 
 #### 2. Set up environment variables
@@ -83,17 +83,17 @@ Open the `.env` file and fill in the required values:
 
 ```bash
 PRIVATE_KEY=<your_private_key>
-RPC_URL_FUJI=<your_rpc_url_fuji>
-RPC_URL_SEPOLIA=<your_rpc_url_ethereum_sepolia>
+RPC_URL_ETHEREUM_MAINNET=<your_rpc_url_ethereum_mainnet>
+RPC_URL_BASE_MAINNET=<your_rpc_url_base_mainnet>
 ETHERSCAN_API_KEY=<your_etherscan_api_key>
 ```
 
-| Variable            | Description                                                                                                                                                                                                                                                                         |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PRIVATE_KEY`       | The private key for your testnet wallet. If you use MetaMask, follow [this guide](https://support.metamask.io/managing-my-wallet/secret-recovery-phrase-and-private-keys/how-to-export-an-accounts-private-key/) to export your private key. **Required for signing transactions.** |
-| `RPC_URL_FUJI`      | The RPC URL for the Fuji testnet. Obtain one from [Alchemy](https://www.alchemy.com/) or [Infura](https://infura.io/).                                                                                                                                                              |
-| `RPC_URL_SEPOLIA`   | The RPC URL for the Ethereum Sepolia testnet. Obtain one from [Alchemy](https://www.alchemy.com/) or [Infura](https://infura.io/).                                                                                                                                                  |
-| `ETHERSCAN_API_KEY` | An API key from Etherscan to verify your contracts. Obtain one from [Etherscan](https://docs.etherscan.io/getting-started/viewing-api-usage-statistics).                                                                                                                            |
+| Variable                   | Description                                                                                                                                                                                                                                                                 |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PRIVATE_KEY`              | The private key for your wallet. If you use MetaMask, follow [this guide](https://support.metamask.io/managing-my-wallet/secret-recovery-phrase-and-private-keys/how-to-export-an-accounts-private-key/) to export your private key. **Required for signing transactions.** |
+| `RPC_URL_ETHEREUM_MAINNET` | The RPC URL for Ethereum Mainnet. Obtain one from [Alchemy](https://www.alchemy.com/) or [Infura](https://infura.io/).                                                                                                                                                      |
+| `RPC_URL_BASE_MAINNET`     | The RPC URL for Base Mainnet. Obtain one from [Alchemy](https://www.alchemy.com/) or [Infura](https://infura.io/).                                                                                                                                                          |
+| `ETHERSCAN_API_KEY`        | An API key from Etherscan to verify your contracts. Obtain one from [Etherscan](https://docs.etherscan.io/getting-started/viewing-api-usage-statistics).                                                                                                                    |
 
 #### 3. Load environment variables
 
@@ -119,7 +119,9 @@ forge compile
 
 ### Config File Overview
 
-The `config.json` file within the `script` directory defines the key parameters used by all scripts. You can customize the token name, symbol, maximum supply, and cross-chain settings, among other fields.
+The `config.json` file within the `script` directory defines the key parameters used by all scripts for **mainnet deployments**. You can customize the token name, symbol, maximum supply, and cross-chain settings, among other fields.
+
+A separate `config-testnet.json` is also provided for testnet deployments. See the [Testnet Configuration](#testnet-configuration) section below for details.
 
 Example `config.json` file:
 
@@ -137,26 +139,51 @@ Example `config.json` file:
   "tokenAmountToTransfer": 100000000000000000000,
   "feeType": "native",
   "remoteChains": {
-    "11155111": 43113,
-    "43113": 11155111
+    "1": 8453,
+    "8453": 1
   }
 }
 ```
 
 The `config.json` file contains the following parameters:
 
-| Field                   | Description                                                                                                                                                                                                                                      |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `name`                  | The name of the token you are going to deploy.                                                                                                                                                                                                   |
-| `symbol`                | The symbol of the token.                                                                                                                                                                                                                         |
-| `decimals`              | The number of decimals for the token (usually `18` for standard ERC tokens).                                                                                                                                                                     |
-| `maxSupply`             | The maximum supply of tokens (in the smallest unit, according to `decimals`). When `maxSupply` is 0, the supply is unlimited.                                                                                                                    |
-| `preMint`               | The amount of tokens to be minted to the owner at the time of deployment (in the smallest unit, according to `decimals`). When `preMint` is 0, no tokens will be minted during deployment.                                                       |
-| `ccipAdminAddress`      | The address of the CCIP admin.                                                                                                                                                                                                                   |
-| `tokenAmountToMint`     | The amount of tokens to mint when running the minting script (in wei).                                                                                                                                                                           |
-| `tokenAmountToTransfer` | The amount of tokens to transfer when running the token transfer script.                                                                                                                                                                         |
-| `feeType`               | Defines the fee type for transferring tokens across chains. Options are `"link"` or `"native"`.                                                                                                                                                  |
-| `remoteChains`          | Defines the relationship between source and remote (destination) chain IDs. Example: `"43113": 11155111` means that if you're running a script on Avalanche Fuji (chain ID `43113`), the remote chain is Ethereum Sepolia (chain ID `11155111`). |
+| Field                   | Description                                                                                                                                                                                                                    |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name`                  | The name of the token you are going to deploy.                                                                                                                                                                                 |
+| `symbol`                | The symbol of the token.                                                                                                                                                                                                       |
+| `decimals`              | The number of decimals for the token (usually `18` for standard ERC tokens).                                                                                                                                                   |
+| `maxSupply`             | The maximum supply of tokens (in the smallest unit, according to `decimals`). When `maxSupply` is 0, the supply is unlimited.                                                                                                  |
+| `preMint`               | The amount of tokens to be minted to the owner at the time of deployment (in the smallest unit, according to `decimals`). When `preMint` is 0, no tokens will be minted during deployment.                                     |
+| `ccipAdminAddress`      | The address of the CCIP admin.                                                                                                                                                                                                 |
+| `tokenAmountToMint`     | The amount of tokens to mint when running the minting script (in wei).                                                                                                                                                         |
+| `tokenAmountToTransfer` | The amount of tokens to transfer when running the token transfer script.                                                                                                                                                       |
+| `feeType`               | Defines the fee type for transferring tokens across chains. Options are `"link"` or `"native"`.                                                                                                                                |
+| `remoteChains`          | Defines the relationship between source and remote (destination) chain IDs. Example: `"8453": 1` means that if you're running a script on Base Mainnet (chain ID `8453`), the remote chain is Ethereum Mainnet (chain ID `1`). |
+
+---
+
+### Testnet Configuration
+
+A separate `config-testnet.json` file is provided for running scripts against testnet environments (Avalanche Fuji and Ethereum Sepolia).
+
+By default, all scripts load `config.json` (mainnet). To use the testnet config, pass the `CONFIG_PATH` environment variable when invoking any script:
+
+```bash
+CONFIG_PATH="./script/config-testnet.json" forge script script/<ScriptName>.s.sol \
+  --rpc-url $RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --broadcast
+```
+
+For example, to deploy the token on Ethereum Sepolia using the testnet config:
+
+```bash
+CONFIG_PATH="./script/config-testnet.json" forge script script/DeployToken.s.sol \
+  --rpc-url $RPC_URL_SEPOLIA \
+  --private-key $PRIVATE_KEY \
+  --broadcast \
+  --verify
+```
 
 ---
 
@@ -270,7 +297,7 @@ function __BurnMintERC20_init(
 
 ```bash
 forge script script/DeployToken.s.sol \
-  --rpc-url $RPC_URL_SEPOLIA \
+  --rpc-url $RPC_URL_ETHEREUM_MAINNET \
   --private-key $PRIVATE_KEY \
   --broadcast \
   --verify
@@ -339,18 +366,18 @@ forge script script/AcceptAdminRole.s.sol --rpc-url $RPC_URL --private-key $PRIV
 
 ### Config Parameters
 
-- **Deployed Token Address**: Read from the output file corresponding to the current chain (e.g., `deployedToken_avalanche_fuji.json`).
+- **Deployed Token Address**: Read from the output file corresponding to the current chain (e.g., `deployedToken_base_mainnet.json`).
 - **TokenAdminRegistry Address**: Retrieved based on the network settings in `HelperConfig.s.sol`.
 
 ### Examples
 
 ```bash
-forge script script/AcceptAdminRole.s.sol --rpc-url $RPC_URL_SEPOLIA --private-key $PRIVATE_KEY --broadcast
+forge script script/AcceptAdminRole.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast
 ```
 
 This will:
 
-- Retrieve the deployed token address from the JSON file for the Fuji network.
+- Retrieve the deployed token address from the JSON file for the Ethereum Mainnet network.
 - Check if the current signer is the pending administrator.
 - Accept the admin role for the token if the signer is the pending administrator.
 
@@ -384,11 +411,11 @@ forge script script/AddRemotePool.s.sol --rpc-url $RPC_URL --private-key $PRIVAT
 ### Examples
 
 ```bash
-forge script script/AddRemotePool.s.sol --rpc-url $RPC_URL_SEPOLIA --private-key $PRIVATE_KEY --broadcast \
+forge script script/AddRemotePool.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast \
   --sig "run(address,uint256,address)" -- \
   0xYourLocalPoolAddress \
-  11155111 \
-  0xYourRemotePoolAddressOnEthereumSepolia
+  8453 \
+  0xYourRemotePoolAddressOnBaseMainnet
 ```
 
 ### Notes
@@ -421,7 +448,7 @@ forge script script/ApplyChainUpdates.s.sol --rpc-url $RPC_URL --private-key $PR
 ### Examples
 
 ```bash
-forge script script/ApplyChainUpdates.s.sol --rpc-url $RPC_URL_SEPOLIA --private-key $PRIVATE_KEY --broadcast
+forge script script/ApplyChainUpdates.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast
 ```
 
 ### Notes
@@ -451,7 +478,7 @@ forge script script/ClaimAdmin.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_K
 ### Examples
 
 ```bash
-forge script script/ClaimAdmin.s.sol --rpc-url $RPC_URL_SEPOLIA --private-key $PRIVATE_KEY --broadcast
+forge script script/ClaimAdmin.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast
 ```
 
 ### Notes
@@ -480,7 +507,7 @@ forge script script/DeployBurnMintTokenPool.s.sol --rpc-url $RPC_URL --private-k
 ### Examples
 
 ```bash
-forge script script/DeployBurnMintTokenPool.s.sol --rpc-url $RPC_URL_SEPOLIA --private-key $PRIVATE_KEY --broadcast --verify
+forge script script/DeployBurnMintTokenPool.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast --verify
 ```
 
 ### Notes
@@ -509,7 +536,7 @@ forge script script/DeployLockReleaseTokenPool.s.sol --rpc-url $RPC_URL --privat
 ### Examples
 
 ```bash
-forge script script/DeployLockReleaseTokenPool.s.sol --rpc-url $RPC_URL_SEPOLIA --private-key $PRIVATE_KEY --broadcast --verify
+forge script script/DeployLockReleaseTokenPool.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast --verify
 ```
 
 ---
@@ -548,7 +575,7 @@ The script reads from `config.json`:
 
 ```bash
 forge script script/DeployToken.s.sol \
-  --rpc-url $RPC_URL_SEPOLIA \
+  --rpc-url $RPC_URL_ETHEREUM_MAINNET \
   --private-key $PRIVATE_KEY \
   --broadcast \
   --verify
@@ -582,10 +609,10 @@ forge script script/GetCurrentRateLimits.s.sol:GetCurrentRateLimits --rpc-url $R
 
 ```bash
 forge script script/GetCurrentRateLimits.s.sol:GetCurrentRateLimits \
-  --rpc-url $RPC_URL_SEPOLIA \
+  --rpc-url $RPC_URL_ETHEREUM_MAINNET \
   --sig "run(address,uint256)" -- \
-  0xYourPoolAddressOnFuji \
-  11155111
+  0xYourPoolAddressOnEthereumMainnet \
+  8453
 ```
 
 ---
@@ -610,9 +637,9 @@ forge script script/GetPoolConfig.s.sol:GetPoolConfig --rpc-url $RPC_URL --sig "
 
 ```bash
 forge script script/GetPoolConfig.s.sol:GetPoolConfig \
-  --rpc-url $RPC_URL_SEPOLIA \
+  --rpc-url $RPC_URL_ETHEREUM_MAINNET \
   --sig "run(address)" -- \
-  0xYourPoolAddressOnEthereumSepolia
+  0xYourPoolAddressOnEthereumMainnet
 ```
 
 ### Notes
@@ -641,7 +668,7 @@ forge script script/MintTokens.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_K
 ### Examples
 
 ```bash
-forge script script/MintTokens.s.sol --rpc-url $RPC_URL_SEPOLIA --private-key $PRIVATE_KEY --broadcast
+forge script script/MintTokens.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast
 ```
 
 ---
@@ -670,11 +697,11 @@ forge script script/RemoveRemotePool.s.sol --rpc-url $RPC_URL --private-key $PRI
 ### Examples
 
 ```bash
-forge script script/RemoveRemotePool.s.sol --rpc-url $RPC_URL_SEPOLIA --private-key $PRIVATE_KEY --broadcast \
+forge script script/RemoveRemotePool.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast \
   --sig "run(address,uint256,address)" -- \
   0xYourLocalPoolAddress \
-  11155111 \
-  0xYourRemotePoolAddressOnEthereumSepolia
+  8453 \
+  0xYourRemotePoolAddressOnBaseMainnet
 ```
 
 ---
@@ -700,7 +727,7 @@ forge script script/SetPool.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY 
 ### Examples
 
 ```bash
-forge script script/SetPool.s.sol --rpc-url $RPC_URL_SEPOLIA --private-key $PRIVATE_KEY --broadcast
+forge script script/SetPool.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast
 ```
 
 ---
@@ -726,7 +753,7 @@ forge script script/SetRateLimitAdmin.s.sol --rpc-url $RPC_URL --private-key $PR
 ### Examples
 
 ```bash
-forge script script/SetRateLimitAdmin.s.sol --rpc-url $RPC_URL_SEPOLIA --private-key $PRIVATE_KEY --broadcast \
+forge script script/SetRateLimitAdmin.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast \
   --sig "run(address,address)" -- \
   0xYourPoolAddress \
   0xNewAdminAddress
@@ -755,7 +782,7 @@ forge script script/TransferTokenAdminRole.s.sol --rpc-url $RPC_URL --private-ke
 ### Examples
 
 ```bash
-forge script script/TransferTokenAdminRole.s.sol --rpc-url $RPC_URL_SEPOLIA --private-key $PRIVATE_KEY --broadcast \
+forge script script/TransferTokenAdminRole.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast \
   --sig "run(address,address)" -- \
   0xYourTokenAddress \
   0xNewAdminAddress
@@ -791,7 +818,7 @@ forge script script/TransferTokens.s.sol --rpc-url $RPC_URL --private-key $PRIVA
 ### Examples
 
 ```bash
-forge script script/TransferTokens.s.sol --rpc-url $RPC_URL_SEPOLIA --private-key $PRIVATE_KEY --broadcast
+forge script script/TransferTokens.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast
 ```
 
 ---
@@ -818,7 +845,7 @@ forge script script/UpdateAllowList.s.sol --rpc-url $RPC_URL --private-key $PRIV
 ### Examples
 
 ```bash
-forge script script/UpdateAllowList.s.sol --rpc-url $RPC_URL_SEPOLIA --private-key $PRIVATE_KEY --broadcast \
+forge script script/UpdateAllowList.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast \
   --sig "run(address,address[],address[])" -- \
   0xYourPoolAddress \
   '[0xAddressToAdd1,0xAddressToAdd2]' \
@@ -871,10 +898,10 @@ forge script script/UpdateRateLimiters.s.sol --rpc-url $RPC_URL --private-key $P
 Update both inbound and outbound rate limiters:
 
 ```bash
-forge script script/UpdateRateLimiters.s.sol --rpc-url $RPC_URL_SEPOLIA --private-key $PRIVATE_KEY --broadcast \
+forge script script/UpdateRateLimiters.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast \
   --sig "run(address,uint256,uint8,bool,uint128,uint128,bool,uint128,uint128)" -- \
   <POOL_ADDRESS> \
-  43113 \
+  8453 \
   2 \
   true \
   10000000000000000000 \
@@ -887,10 +914,10 @@ forge script script/UpdateRateLimiters.s.sol --rpc-url $RPC_URL_SEPOLIA --privat
 Update only the outbound rate limiter:
 
 ```bash
-forge script script/UpdateRateLimiters.s.sol --rpc-url RPC_URL_SEPOLIA --private-key $PRIVATE_KEY --broadcast \
+forge script script/UpdateRateLimiters.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast \
   --sig "run(address,uint256,uint8,bool,uint128,uint128,bool,uint128,uint128)" -- \
   <POOL_ADDRESS> \
-  43113 \
+  8453 \
   0 \
   true \
   10000000000000000000 \

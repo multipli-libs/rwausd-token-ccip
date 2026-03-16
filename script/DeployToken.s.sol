@@ -13,7 +13,7 @@ contract DeployToken is Script {
         string memory chainName = resolver.getChainNameSafe(block.chainid);
 
         string memory root = vm.projectRoot();
-        string memory configPath = string.concat(root, "/script/config.json");
+        string memory configPath = vm.envOr("CONFIG_PATH", string.concat(root, "/script/config.json"));
 
         address admin = HelperUtils.getAddressFromJson(vm, configPath, ".rwaUSDToken.ccipAdminAddress");
 

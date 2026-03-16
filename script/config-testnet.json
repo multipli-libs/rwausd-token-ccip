@@ -11,7 +11,7 @@
   "tokenAmountToTransfer": 100000000000000000000,
   "feeType": "native",
   "remoteChains": {
-    "1": 8453,
-    "8453": 1
+    "11155111": 43113,
+    "43113": 11155111
   }
 }
