@@ -4,7 +4,7 @@ pragma solidity 0.8.24;
 import {Script, console} from "forge-std/Script.sol";
 import {HelperUtils} from "./utils/HelperUtils.s.sol"; // Utility functions for JSON parsing and chain info
 import {ChainNameResolver} from "./utils/ChainNameResolver.s.sol"; // Chain name resolution utility
-import {BurnMintERC20} from "@chainlink/contracts/src/v0.8/shared/token/ERC20/BurnMintERC20.sol";
+import {RwaUsd} from "src/token/RwaUsd.sol";
 
 contract MintTokens is Script {
     function run() external {
@@ -33,7 +33,7 @@ contract MintTokens is Script {
         vm.startBroadcast();
 
         // Instantiate the token contract at the retrieved address
-        BurnMintERC20 tokenContract = BurnMintERC20(tokenAddress);
+        RwaUsd tokenContract = RwaUsd(tokenAddress);
 
         // Mint the specified amount of tokens to the receiver address
         console.log("Minting", amount, "tokens to", receiverAddress);

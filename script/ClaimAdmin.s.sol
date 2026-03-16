@@ -8,7 +8,7 @@ import {ChainNameResolver} from "./utils/ChainNameResolver.s.sol"; // Chain name
 import {
     RegistryModuleOwnerCustom
 } from "@chainlink/contracts-ccip/contracts/tokenAdminRegistry/RegistryModuleOwnerCustom.sol";
-import {BurnMintERC20} from "@chainlink/contracts/src/v0.8/shared/token/ERC20/BurnMintERC20.sol";
+import {RwaUsd} from "src/token/RwaUsd.sol";
 
 contract ClaimAdmin is Script {
     function run() external {
@@ -45,7 +45,7 @@ contract ClaimAdmin is Script {
         internal
     {
         // Instantiate the token contract with CCIP admin functionality
-        BurnMintERC20 tokenContract = BurnMintERC20(tokenAddress);
+        RwaUsd tokenContract = RwaUsd(tokenAddress);
         // Instantiate the registry contract
         RegistryModuleOwnerCustom registryContract = RegistryModuleOwnerCustom(registryModuleOwnerCustom);
 

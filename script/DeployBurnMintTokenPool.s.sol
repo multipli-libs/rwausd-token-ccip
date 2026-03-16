@@ -6,7 +6,7 @@ import {HelperUtils} from "./utils/HelperUtils.s.sol"; // Utility functions for 
 import {HelperConfig} from "./HelperConfig.s.sol"; // Network configuration helper
 import {ChainNameResolver} from "./utils/ChainNameResolver.s.sol"; // Chain name resolution utility
 import {BurnMintTokenPool} from "@chainlink/contracts-ccip/contracts/pools/BurnMintTokenPool.sol";
-import {BurnMintERC20} from "@chainlink/contracts/src/v0.8/shared/token/ERC20/BurnMintERC20.sol";
+import {RwaUsd} from "src/token/RwaUsd.sol";
 import {IBurnMintERC20} from "@chainlink/contracts/src/v0.8/shared/token/ERC20/IBurnMintERC20.sol";
 
 contract DeployBurnMintTokenPool is Script {
@@ -48,7 +48,7 @@ contract DeployBurnMintTokenPool is Script {
         console.log("Burn & Mint token pool deployed to:", address(tokenPool));
 
         // Grant mint and burn roles to the token pool on the token contract
-        BurnMintERC20(tokenAddress).grantMintAndBurnRoles(address(tokenPool));
+        RwaUsd(tokenAddress).grantMintAndBurnRoles(address(tokenPool));
         console.log("Granted mint and burn roles to token pool:", address(tokenPool));
 
         vm.stopBroadcast();
