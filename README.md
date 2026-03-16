@@ -216,82 +216,45 @@ npm run test:min
 
 This repository extends the standard Chainlink CCT setup with a custom upgradeable token contract — `RwaUsd` — designed for USD-pegged real-world assets on CCIP-enabled chains.
 
-Instead of deploying the standard `BurnMintERC20`, we created a UUPS-upgradeable version built on top of a custom `BurnMintERC20Upgradeable` base contract.
-
----
-
-### BurnMintERC20Upgradeable
-
-A custom upgradeable base contract that replicates the functionality of Chainlink's [`BurnMintERC20`](https://github.com/smartcontractkit/chainlink-evm/blob/develop/contracts/src/v0.8/shared/token/ERC20/BurnMintERC20.sol) using OpenZeppelin v5.x upgradeable contracts.
-
-#### Key changes from the original `BurnMintERC20`
-
-**1. OpenZeppelin v5.x compatibility**
-
-The contract uses OpenZeppelin Contracts Upgradeable v5.x ([`ERC20BurnableUpgradeable`](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/blob/master/contracts/token/ERC20/extensions/ERC20BurnableUpgradeable.sol), [`AccessControlUpgradeable`](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/blob/master/contracts/access/AccessControlUpgradeable.sol)).
-
-In OZ v5, `_transfer` and the 3-parameter `_approve` are no longer `virtual` and cannot be overridden. The contract adapts as follows:
-
-- `_transfer` recipient check → moved to `_update()` override ([OZ v5 docs](https://docs.openzeppelin.com/contracts/5.x/api/token/erc20#ERC20-_update-address-address-uint256-)):
-
-```solidity
-function _update(address from, address to, uint256 value) internal virtual override {
-    if (to == address(this)) revert InvalidRecipient(to);
-    super._update(from, to, value);
-}
-```
-
-- `_approve` spender check → uses the new 4-parameter virtual override introduced in v5 ([OZ v5 docs](https://docs.openzeppelin.com/contracts/5.x/api/token/erc20#ERC20-_approve-address-address-uint256-bool-)):
-
-```solidity
-function _approve(address owner, address spender, uint256 amount, bool emitEvent) internal virtual override {
-    if (spender == address(this)) revert InvalidRecipient(spender);
-    super._approve(owner, spender, amount, emitEvent);
-}
-```
-
-**2. ERC-7201 namespaced storage**
-
-All state variables (`s_decimals`, `s_maxSupply`, `s_ccipAdmin`) are moved out of sequential storage slots into an [ERC-7201](https://eips.ethereum.org/EIPS/eip-7201) namespaced storage struct. This eliminates the need for `__gap` arrays and prevents storage layout collisions across upgrades:
-
-```solidity
-struct BurnMintERC20Storage {
-    uint8 decimals;
-    uint256 maxSupply;
-    address ccipAdmin;
-}
-
-bytes32 private constant BURN_MINT_ERC20_STORAGE_SLOT =
-    keccak256(abi.encode(uint256(keccak256("burnminterc20.storage.BurnMintERC20Storage")) - 1)) & ~bytes32(uint256(0xff));
-```
-
-**3. Initializer pattern**
-
-The constructor is replaced with an `__BurnMintERC20_init` initializer following the [OZ upgradeable initializer pattern](https://docs.openzeppelin.com/upgrades-plugins/writing-upgradeable#initializers):
-
-```solidity
-function __BurnMintERC20_init(
-    string memory name,
-    string memory symbol,
-    uint8 decimals_,
-    uint256 maxSupply_,
-    uint256 preMint,
-    address admin_
-) internal onlyInitializing
-```
+Instead of deploying the standard `BurnMintERC20`, we implemented `RwaUsd` as a self-contained UUPS-upgradeable token. It is based on Chainlink's [`BurnMintERC20UUPS`](https://github.com/smartcontractkit/chainlink-evm/blob/develop/contracts/src/v0.8/shared/token/ERC20/upgradeable/BurnMintERC20UUPS.sol) and [`BurnMintERC20PausableUUPS`](https://github.com/smartcontractkit/chainlink-evm/blob/develop/contracts/src/v0.8/shared/token/ERC20/upgradeable/BurnMintERC20PausableUUPS.sol) contracts from the Chainlink EVM repository, but rather than inheriting from these as separate base contracts, all functionality is merged directly into `RwaUsd` as a single self-contained implementation.
 
 ---
 
 ### RwaUsd
 
-`RwaUsd` extends `BurnMintERC20Upgradeable` with [UUPS upgradeability](https://docs.openzeppelin.com/contracts/5.x/api/proxy#UUPSUpgradeable) via OpenZeppelin's `UUPSUpgradeable`.
+`RwaUsd` combines the mint/burn functionality of `BurnMintERC20UUPS` and the pausable functionality of `BurnMintERC20PausableUUPS` into a single contract, without inheriting from either. It uses OpenZeppelin v5.x upgradeable contracts and follows the UUPS proxy pattern.
 
-#### Key design decisions
+#### Key changes from the upstream Chainlink contracts
 
-- **UUPS proxy pattern** — upgrade logic lives in the implementation contract, gated by `DEFAULT_ADMIN_ROLE`
-- **ERC-7201 storage** — `RwaUsd`-specific state (pause, blocklist) is stored in a separate namespaced struct to avoid layout collisions with the base contract
-- **Single admin** — `DEFAULT_ADMIN_ROLE` is granted only to the provided `admin_` address at initialization; the deployer never holds admin rights
-- **`_disableInitializers()`** — called in the constructor to prevent the implementation contract from being initialized directly
+**1. Self-contained implementation**
+
+In the upstream Chainlink repository, pausable functionality is split across two contracts — `BurnMintERC20UUPS` provides the core mint/burn/role logic, and `BurnMintERC20PausableUUPS` extends it with pause/unpause support. `RwaUsd` merges both into a single file without inheritance from either, making the full implementation self-contained and easier to audit.
+
+**2. Renamed storage struct and namespaced slot**
+
+The upstream `BurnMintERC20UUPS` uses the following storage namespace:
+
+```solidity
+// keccak256(abi.encode(uint256(keccak256("chainlink.storage.BurnMintERC20UUPS")) - 1)) & ~bytes32(uint256(0xff));
+bytes32 private constant BURN_MINT_ERC20_UUPS_STORAGE_LOCATION = ...;
+```
+
+`RwaUsd` uses a project-specific namespace:
+
+```solidity
+// keccak256(abi.encode(uint256(keccak256("multipli.storage.RwaUsd")) - 1)) & ~bytes32(uint256(0xff));
+bytes32 private constant RWAUSD_STORAGE_LOCATION = ...;
+```
+
+The storage struct has also been renamed from `BurnMintERC20UUPSStorage` to `RwaUsdStorage`:
+
+```solidity
+struct RwaUsdStorage {
+    address ccipAdmin;
+    uint8 decimals;
+    uint256 maxSupply;
+}
+```
 
 #### Deployment
 
@@ -303,7 +266,7 @@ forge script script/DeployToken.s.sol \
   --verify
 ```
 
-The deploy script reads the `admin` address from `config.json`:
+The deploy script reads configuration from `config.json`:
 
 ```json
 {
@@ -321,7 +284,7 @@ To upgrade the proxy to a new implementation, deploy a new contract that extends
 token.upgradeToAndCall(newImplementation, "");
 ```
 
-Only the address holding `DEFAULT_ADMIN_ROLE` can authorize upgrades.
+Only the address holding `UPGRADER_ROLE` can authorize upgrades.
 
 ---
 
