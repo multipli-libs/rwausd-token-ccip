@@ -118,7 +118,7 @@ contract rwaUSD is
         $.ccipAdmin = defaultAdmin;
 
         if (preMint != 0) {
-            if (preMint > maxSupply_) {
+            if (maxSupply_ != 0 && preMint > maxSupply_) {
                 revert RwaUsd__MaxSupplyExceeded(preMint);
             }
             _mint(defaultAdmin, preMint);
