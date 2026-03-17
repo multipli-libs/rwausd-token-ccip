@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {RwaUsd} from "src/token/RwaUsd.sol";
+import {rwaUSD} from "src/token/RWAUSD.sol";
 
-/// @custom:oz-upgrades-from RwaUsd
-contract MockRwaUsdV2 is RwaUsd {
+/// @custom:oz-upgrades-from rwaUSD
+contract MockRwaUsdV2 is rwaUSD {
     //new methods
     uint256 public newVariable;
 

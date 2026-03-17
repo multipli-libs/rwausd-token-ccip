@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
-import {RwaUsd} from "src/token/RwaUsd.sol";
+import {rwaUSD} from "src/token/RWAUSD.sol";
 import {MockRwaUsdV2} from "./mocks/MockRwaUsdV2.sol";
 import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
@@ -13,8 +13,8 @@ import {
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 
-contract RwaUsdTest is Test {
-    RwaUsd internal token;
+contract rwaUSDTest is Test {
+    rwaUSD internal token;
 
     address internal admin = makeAddr("admin");
     address internal minter = makeAddr("minter");
@@ -24,7 +24,7 @@ contract RwaUsdTest is Test {
     address internal bob = makeAddr("bob");
     address internal deployer = makeAddr("deployer");
 
-    /// @dev 1 hour delay configured in RwaUsd initialize
+    /// @dev 1 hour delay configured in rwaUSD initialize
     uint48 internal constant ADMIN_DELAY = 1 hours;
 
     /// @dev The ERC-7201 storage slot for RwaUsdStorage:
@@ -34,7 +34,7 @@ contract RwaUsdTest is Test {
     ///        slot+0  → address ccipAdmin (low 160 bits) + uint8 decimals (bits 160–167), packed
     ///        slot+1  → uint256 maxSupply
     bytes32 internal constant BURN_MINT_ERC20_STORAGE_SLOT =
-        0x82cef61f4c40d7d5e0ccbca8de5ddf691aeb2979bdbd13bd1e8748d660c9ef00;
+        0xc1a8840385e35995fb7aabd6059552ccaa64bb804485e90cb444ac534e5ef600;
 
     // ================================================================
     // │                          Helpers                             │
@@ -91,7 +91,7 @@ contract RwaUsdTest is Test {
         vm.startPrank(deployer);
 
         bytes memory data = abi.encodeCall(
-            RwaUsd.initialize,
+            rwaUSD.initialize,
             (
                 "Real World Asset USD",
                 "rwaUSD",
@@ -103,8 +103,8 @@ contract RwaUsdTest is Test {
             )
         );
 
-        address proxy = Upgrades.deployUUPSProxy("RwaUsd.sol", data);
-        token = RwaUsd(address(proxy));
+        address proxy = Upgrades.deployUUPSProxy("RWAUSD.sol:rwaUSD", data);
+        token = rwaUSD(address(proxy));
         vm.stopPrank();
 
         vm.startPrank(admin);
@@ -180,31 +180,31 @@ contract RwaUsdTest is Test {
     }
 
     function test_initialize_RevertsIfAdminIsZeroAddress() public {
-        address implementation = address(new RwaUsd());
+        address implementation = address(new rwaUSD());
         _expectInvalidDefaultAdminRevert(address(0));
         new ERC1967Proxy(
             implementation,
-            abi.encodeCall(RwaUsd.initialize, ("Real World Asset USD", "rwaUSD", 18, 0, 0, address(0), address(0)))
+            abi.encodeCall(rwaUSD.initialize, ("Real World Asset USD", "rwaUSD", 18, 0, 0, address(0), address(0)))
         );
     }
 
     function test_initialize_PreMintSentToAdmin() public {
-        address implementation = address(new RwaUsd());
+        address implementation = address(new rwaUSD());
         ERC1967Proxy proxy = new ERC1967Proxy(
             implementation,
-            abi.encodeCall(RwaUsd.initialize, ("Real World Asset USD", "rwaUSD", 18, 1000e18, 100e18, admin, admin))
+            abi.encodeCall(rwaUSD.initialize, ("Real World Asset USD", "rwaUSD", 18, 1000e18, 100e18, admin, admin))
         );
-        RwaUsd newToken = RwaUsd(address(proxy));
+        rwaUSD newToken = rwaUSD(address(proxy));
         assertEq(newToken.balanceOf(admin), 100e18);
         assertEq(newToken.totalSupply(), 100e18);
     }
 
     function test_initialize_RevertsIfPreMintExceedsMaxSupply() public {
-        address implementation = address(new RwaUsd());
+        address implementation = address(new rwaUSD());
         _expectMaxSupplyExceededRevert(200e18);
         new ERC1967Proxy(
             implementation,
-            abi.encodeCall(RwaUsd.initialize, ("Real World Asset USD", "rwaUSD", 18, 100e18, 200e18, admin, admin))
+            abi.encodeCall(rwaUSD.initialize, ("Real World Asset USD", "rwaUSD", 18, 100e18, 200e18, admin, admin))
         );
     }
 
@@ -227,12 +227,12 @@ contract RwaUsdTest is Test {
 
     function test_mint_RevertsWhenMaxSupplyExceeded() public {
         vm.startPrank(admin);
-        address implementation = address(new RwaUsd());
+        address implementation = address(new rwaUSD());
         ERC1967Proxy proxy = new ERC1967Proxy(
             implementation,
-            abi.encodeCall(RwaUsd.initialize, ("Real World Asset USD", "rwaUSD", 18, 1000e18, 0, admin, admin))
+            abi.encodeCall(rwaUSD.initialize, ("Real World Asset USD", "rwaUSD", 18, 1000e18, 0, admin, admin))
         );
-        RwaUsd cappedToken = RwaUsd(address(proxy));
+        rwaUSD cappedToken = rwaUSD(address(proxy));
         cappedToken.grantRole(cappedToken.MINTER_ROLE(), minter);
         vm.stopPrank();
 
@@ -650,7 +650,7 @@ contract RwaUsdTest is Test {
     function test_setCCIPAdmin_EmitsEvent() public {
         vm.prank(admin);
         vm.expectEmit(true, true, false, false);
-        emit RwaUsd.CCIPAdminTransferred(admin, alice);
+        emit rwaUSD.CCIPAdminTransferred(admin, alice);
         token.setCCIPAdmin(alice);
     }
 
@@ -869,7 +869,7 @@ contract RwaUsdTest is Test {
 
     function test_upgrade_storage_SlotConstantMatchesERC7201Formula() public pure {
         bytes32 computed =
-            keccak256(abi.encode(uint256(keccak256("multipli.storage.RwaUsd")) - 1)) & ~bytes32(uint256(0xff));
+            keccak256(abi.encode(uint256(keccak256("multipli.storage.rwaUSD")) - 1)) & ~bytes32(uint256(0xff));
 
         assertEq(
             computed,

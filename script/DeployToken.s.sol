@@ -4,7 +4,7 @@ pragma solidity 0.8.24;
 import {Script, console} from "forge-std/Script.sol";
 import {HelperUtils} from "./utils/HelperUtils.s.sol";
 import {ChainNameResolver} from "./utils/ChainNameResolver.s.sol";
-import {RwaUsd} from "src/token/RwaUsd.sol";
+import {rwaUSD} from "src/token/RWAUSD.sol";
 import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 
 contract DeployToken is Script {
@@ -13,14 +13,25 @@ contract DeployToken is Script {
         string memory chainName = resolver.getChainNameSafe(block.chainid);
 
         string memory root = vm.projectRoot();
-        string memory configPath = vm.envOr("CONFIG_PATH", string.concat(root, "/script/config.json"));
+        string memory configPath = vm.envOr("CONFIG_PATH", string.concat(root, "/script/mainnet.config.json"));
 
         address admin = HelperUtils.getAddressFromJson(vm, configPath, ".rwaUSDToken.ccipAdminAddress");
 
         vm.startBroadcast();
 
-        bytes memory data = abi.encodeWithSelector(RwaUsd.initialize.selector, admin);
-        address proxy = Upgrades.deployUUPSProxy("RwaUsd.sol", data);
+        bytes memory data = abi.encodeCall(
+            rwaUSD.initialize,
+            (
+                "Real World Asset USD",
+                "rwaUSD",
+                uint8(18),
+                0, // maxSupply (unlimited)
+                0, // preMint
+                admin,
+                admin // defaultUpgrader
+            )
+        );
+        address proxy = Upgrades.deployUUPSProxy("RWAUSD.sol:rwaUSD", data);
 
         console.log("Deployed rwausd proxy at:", proxy);
         console.log("Admin:", admin);

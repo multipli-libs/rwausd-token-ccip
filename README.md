@@ -7,7 +7,7 @@ Find a list of available tutorials on the Chainlink documentation: [Cross-Chain 
 ## Table of Contents
 
 1. [Setup](#setup)
-2. [RwaUsd Token (Upgradeable)](#rwausd-token-upgradeable)
+2. [rwaUSD Token (Upgradeable)](#rwausd-token-upgradeable)
 3. [Testing](#testing)
 4. [AcceptAdminRole](#acceptadminrole)
 5. [AddRemotePool](#addremotepool)
@@ -119,11 +119,11 @@ forge compile
 
 ### Config File Overview
 
-The `config.json` file within the `script` directory defines the key parameters used by all scripts for **mainnet deployments**. You can customize the token name, symbol, maximum supply, and cross-chain settings, among other fields.
+The `mainnet.config.json` file within the `script` directory defines the key parameters used by all scripts for **mainnet deployments**. You can customize the token name, symbol, maximum supply, and cross-chain settings, among other fields.
 
-A separate `config-testnet.json` is also provided for testnet deployments. See the [Testnet Configuration](#testnet-configuration) section below for details.
+A separate `testnet.config.json` is also provided for testnet deployments. See the [Testnet Configuration](#testnet-configuration) section below for details.
 
-Example `config.json` file:
+Example `mainnet.config.json` file:
 
 ```json
 {
@@ -145,7 +145,7 @@ Example `config.json` file:
 }
 ```
 
-The `config.json` file contains the following parameters:
+The `mainnet.config.json` file contains the following parameters:
 
 | Field                   | Description                                                                                                                                                                                                                    |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -164,12 +164,12 @@ The `config.json` file contains the following parameters:
 
 ### Testnet Configuration
 
-A separate `config-testnet.json` file is provided for running scripts against testnet environments (Avalanche Fuji and Ethereum Sepolia).
+A separate `testnet.config.json` file is provided for running scripts against testnet environments (Avalanche Fuji and Ethereum Sepolia).
 
-By default, all scripts load `config.json` (mainnet). To use the testnet config, pass the `CONFIG_PATH` environment variable when invoking any script:
+By default, all scripts load `mainnet.config.json` (mainnet). To use the testnet config, pass the `CONFIG_PATH` environment variable when invoking any script:
 
 ```bash
-CONFIG_PATH="./script/config-testnet.json" forge script script/<ScriptName>.s.sol \
+CONFIG_PATH="./script/testnet.config.json" forge script script/<ScriptName>.s.sol \
   --rpc-url $RPC_URL \
   --private-key $PRIVATE_KEY \
   --broadcast
@@ -178,7 +178,7 @@ CONFIG_PATH="./script/config-testnet.json" forge script script/<ScriptName>.s.so
 For example, to deploy the token on Ethereum Sepolia using the testnet config:
 
 ```bash
-CONFIG_PATH="./script/config-testnet.json" forge script script/DeployToken.s.sol \
+CONFIG_PATH="./script/testnet.config.json" forge script script/DeployToken.s.sol \
   --rpc-url $RPC_URL_SEPOLIA \
   --private-key $PRIVATE_KEY \
   --broadcast \
@@ -210,25 +210,25 @@ npm run test:min
 
 ---
 
-## 2. RwaUsd Token (Upgradeable)
+## 2. rwaUSD Token (Upgradeable)
 
 ### Overview
 
-This repository extends the standard Chainlink CCT setup with a custom upgradeable token contract — `RwaUsd` — designed for USD-pegged real-world assets on CCIP-enabled chains.
+This repository extends the standard Chainlink CCT setup with a custom upgradeable token contract — `rwaUSD` — designed for USD-pegged real-world assets on CCIP-enabled chains.
 
-Instead of deploying the standard `BurnMintERC20`, we implemented `RwaUsd` as a self-contained UUPS-upgradeable token. It is based on Chainlink's [`BurnMintERC20UUPS`](https://github.com/smartcontractkit/chainlink-evm/blob/develop/contracts/src/v0.8/shared/token/ERC20/upgradeable/BurnMintERC20UUPS.sol) and [`BurnMintERC20PausableUUPS`](https://github.com/smartcontractkit/chainlink-evm/blob/develop/contracts/src/v0.8/shared/token/ERC20/upgradeable/BurnMintERC20PausableUUPS.sol) contracts from the Chainlink EVM repository, but rather than inheriting from these as separate base contracts, all functionality is merged directly into `RwaUsd` as a single self-contained implementation.
+Instead of deploying the standard `BurnMintERC20`, we implemented `rwaUSD` as a self-contained UUPS-upgradeable token. It is based on Chainlink's [`BurnMintERC20UUPS`](https://github.com/smartcontractkit/chainlink-evm/blob/develop/contracts/src/v0.8/shared/token/ERC20/upgradeable/BurnMintERC20UUPS.sol) and [`BurnMintERC20PausableUUPS`](https://github.com/smartcontractkit/chainlink-evm/blob/develop/contracts/src/v0.8/shared/token/ERC20/upgradeable/BurnMintERC20PausableUUPS.sol) contracts from the Chainlink EVM repository, but rather than inheriting from these as separate base contracts, all functionality is merged directly into `rwaUSD` as a single self-contained implementation.
 
 ---
 
-### RwaUsd
+### rwaUSD
 
-`RwaUsd` combines the mint/burn functionality of `BurnMintERC20UUPS` and the pausable functionality of `BurnMintERC20PausableUUPS` into a single contract, without inheriting from either. It uses OpenZeppelin v5.x upgradeable contracts and follows the UUPS proxy pattern.
+`rwaUSD` combines the mint/burn functionality of `BurnMintERC20UUPS` and the pausable functionality of `BurnMintERC20PausableUUPS` into a single contract, without inheriting from either. It uses OpenZeppelin v5.x upgradeable contracts and follows the UUPS proxy pattern.
 
 #### Key changes from the upstream Chainlink contracts
 
 **1. Self-contained implementation**
 
-In the upstream Chainlink repository, pausable functionality is split across two contracts — `BurnMintERC20UUPS` provides the core mint/burn/role logic, and `BurnMintERC20PausableUUPS` extends it with pause/unpause support. `RwaUsd` merges both into a single file without inheritance from either, making the full implementation self-contained and easier to audit.
+In the upstream Chainlink repository, pausable functionality is split across two contracts — `BurnMintERC20UUPS` provides the core mint/burn/role logic, and `BurnMintERC20PausableUUPS` extends it with pause/unpause support. `rwaUSD` merges both into a single file without inheritance from either, making the full implementation self-contained and easier to audit.
 
 **2. Renamed storage struct and namespaced slot**
 
@@ -239,10 +239,10 @@ The upstream `BurnMintERC20UUPS` uses the following storage namespace:
 bytes32 private constant BURN_MINT_ERC20_UUPS_STORAGE_LOCATION = ...;
 ```
 
-`RwaUsd` uses a project-specific namespace:
+`rwaUSD` uses a project-specific namespace:
 
 ```solidity
-// keccak256(abi.encode(uint256(keccak256("multipli.storage.RwaUsd")) - 1)) & ~bytes32(uint256(0xff));
+// keccak256(abi.encode(uint256(keccak256("multipli.storage.rwaUSD")) - 1)) & ~bytes32(uint256(0xff));
 bytes32 private constant RWAUSD_STORAGE_LOCATION = ...;
 ```
 
@@ -266,7 +266,7 @@ forge script script/DeployToken.s.sol \
   --verify
 ```
 
-The deploy script reads configuration from `config.json`:
+The deploy script reads configuration from `mainnet.config.json`:
 
 ```json
 {
@@ -278,7 +278,7 @@ The deploy script reads configuration from `config.json`:
 
 #### Upgrading
 
-To upgrade the proxy to a new implementation, deploy a new contract that extends `RwaUsd` and call `upgradeToAndCall` via the admin:
+To upgrade the proxy to a new implementation, deploy a new contract that extends `rwaUSD` and call `upgradeToAndCall` via the admin:
 
 ```solidity
 token.upgradeToAndCall(newImplementation, "");
@@ -292,7 +292,7 @@ Only the address holding `UPGRADER_ROLE` can authorize upgrades.
 
 ### Overview
 
-The test suite covers `RwaUsd` initialization, access control, UUPS upgradeability, and ERC-7201 namespaced storage integrity. All tests run with Foundry and require no live network connection.
+The test suite covers `rwaUSD` initialization, access control, UUPS upgradeability, and ERC-7201 namespaced storage integrity. All tests run with Foundry and require no live network connection.
 
 ### Prerequisites
 
@@ -436,7 +436,7 @@ forge script script/ClaimAdmin.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_K
 ### Config Parameters
 
 - **Deployed Token Address**: Read from the output file for the current chain.
-- **Admin Address**: Read from the `config.json` file (`ccipAdminAddress` field).
+- **Admin Address**: Read from the `mainnet.config.json` file (`ccipAdminAddress` field).
 
 ### Examples
 
@@ -446,7 +446,7 @@ forge script script/ClaimAdmin.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --priva
 
 ### Notes
 
-- Ensure the `ccipAdminAddress` field is correctly set in `config.json` before running this script.
+- Ensure the `ccipAdminAddress` field is correctly set in `mainnet.config.json` before running this script.
 
 ---
 
@@ -508,7 +508,7 @@ forge script script/DeployLockReleaseTokenPool.s.sol --rpc-url $RPC_URL_ETHEREUM
 
 ### Description
 
-Deploys the `RwaUsd` upgradeable token contract via a UUPS proxy. Reads the admin address from `config.json` and deploys both the implementation and proxy in a single script.
+Deploys the `rwaUSD` upgradeable token contract via a UUPS proxy. Reads the admin address from `mainnet.config.json` and deploys both the implementation and proxy in a single script.
 
 ### Usage
 
@@ -522,7 +522,7 @@ forge script script/DeployToken.s.sol \
 
 ### Config Parameters
 
-The script reads from `config.json`:
+The script reads from `mainnet.config.json`:
 
 ```json
 {
@@ -546,7 +546,7 @@ forge script script/DeployToken.s.sol \
 
 ### Notes
 
-- **Upgradeable Deployment**: The script deploys a UUPS proxy pointing to the `RwaUsd` implementation using the OZ Foundry upgrades plugin.
+- **Upgradeable Deployment**: The script deploys a UUPS proxy pointing to the `rwaUSD` implementation using the OZ Foundry upgrades plugin.
 - **Chain Name**: The deployed proxy address is saved to `script/output/deployedToken_<chainName>.json`.
 
 ---
@@ -615,7 +615,7 @@ forge script script/GetPoolConfig.s.sol:GetPoolConfig \
 
 ### Description
 
-Mints a specified amount of tokens to the sender's address. The amount is pulled from `config.json`.
+Mints a specified amount of tokens to the sender's address. The amount is pulled from `mainnet.config.json`.
 
 ### Usage
 
@@ -626,7 +626,7 @@ forge script script/MintTokens.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_K
 ### Config Parameters
 
 - **Deployed Token Address**: Read from the output file for the current chain.
-- **Mint Amount**: Read from `config.json` (`tokenAmountToMint` field).
+- **Mint Amount**: Read from `mainnet.config.json` (`tokenAmountToMint` field).
 
 ### Examples
 
@@ -763,7 +763,7 @@ forge script script/TransferTokenAdminRole.s.sol --rpc-url $RPC_URL_ETHEREUM_MAI
 
 ### Description
 
-Facilitates cross-chain token transfers using Chainlink's CCIP. Reads the token address and amount from `config.json` and handles fee payment in either native tokens or LINK.
+Facilitates cross-chain token transfers using Chainlink's CCIP. Reads the token address and amount from `mainnet.config.json` and handles fee payment in either native tokens or LINK.
 
 ### Usage
 
@@ -774,9 +774,9 @@ forge script script/TransferTokens.s.sol --rpc-url $RPC_URL --private-key $PRIVA
 ### Config Parameters
 
 - **Deployed Token Address**: Read from the output file for the current chain.
-- **Transfer Amount**: Read from `config.json` (`tokenAmountToTransfer` field).
-- **Fee Type**: Specified in `config.json` as `"native"` or `"link"`.
-- **Destination Chain**: Determined from the `remoteChains` field in `config.json`.
+- **Transfer Amount**: Read from `mainnet.config.json` (`tokenAmountToTransfer` field).
+- **Fee Type**: Specified in `mainnet.config.json` as `"native"` or `"link"`.
+- **Destination Chain**: Determined from the `remoteChains` field in `mainnet.config.json`.
 
 ### Examples
 

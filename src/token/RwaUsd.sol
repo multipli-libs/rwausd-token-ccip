@@ -17,7 +17,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC1822Proxiable} from "@openzeppelin/contracts/interfaces/draft-IERC1822.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-contract RwaUsd is
+contract rwaUSD is
     Initializable,
     UUPSUpgradeable,
     IBurnMintERC20,
@@ -41,7 +41,7 @@ contract RwaUsd is
     // │                         Storage                              │
     // ================================================================
 
-    /// @custom:storage-location erc7201:chainlink.storage.RwaUsd
+    /// @custom:storage-location erc7201:chainlink.storage.rwaUSD
     struct RwaUsdStorage {
         /// @dev the CCIPAdmin can be used to register with the CCIP token admin registry, but has no other special powers,
         /// and can only be transferred by the owner.
@@ -52,9 +52,9 @@ contract RwaUsd is
         uint256 maxSupply;
     }
 
-    // keccak256(abi.encode(uint256(keccak256("multipli.storage.RwaUsd")) - 1)) & ~bytes32(uint256(0xff));
+    // keccak256(abi.encode(uint256(keccak256("multipli.storage.rwaUSD")) - 1)) & ~bytes32(uint256(0xff));
     bytes32 private constant RWAUSD_STORAGE_LOCATION =
-        0x82cef61f4c40d7d5e0ccbca8de5ddf691aeb2979bdbd13bd1e8748d660c9ef00;
+        0xc1a8840385e35995fb7aabd6059552ccaa64bb804485e90cb444ac534e5ef600;
 
     // solhint-disable-next-line chainlink-solidity/explicit-returns
     function _getRwaUsdStorage() private pure returns (RwaUsdStorage storage $) {

@@ -22,14 +22,14 @@ contract TransferTokens is Script {
 
         // Construct paths to the configuration and token JSON files
         string memory root = vm.projectRoot();
-        string memory configPath = vm.envOr("CONFIG_PATH", string.concat(root, "/script/config.json"));
+        string memory configPath = vm.envOr("CONFIG_PATH", string.concat(root, "/script/mainnet.config.json"));
         string memory tokenPath = string.concat(root, "/script/output/deployedToken_", chainName, ".json");
 
         // Extract the token address from the JSON file
         address tokenAddress =
             HelperUtils.getAddressFromJson(vm, tokenPath, string.concat(".deployedToken_", chainName));
 
-        // Read the amount to transfer and feeType from config.json
+        // Read the amount to transfer and feeType from mainnet.config.json
         uint256 amount = HelperUtils.getUintFromJson(vm, configPath, ".tokenAmountToTransfer");
         string memory feeType = HelperUtils.getStringFromJson(vm, configPath, ".feeType");
 

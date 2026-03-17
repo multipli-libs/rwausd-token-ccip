@@ -16,10 +16,10 @@ contract ApplyChainUpdates is Script {
 
         // Construct paths to the configuration and local pool JSON files
         string memory root = vm.projectRoot();
-        string memory configPath = vm.envOr("CONFIG_PATH", string.concat(root, "/script/config.json"));
+        string memory configPath = vm.envOr("CONFIG_PATH", string.concat(root, "/script/mainnet.config.json"));
         string memory localPoolPath = string.concat(root, "/script/output/deployedTokenPool_", chainName, ".json");
 
-        // Read the remoteChainId from config.json based on the current chain ID
+        // Read the remoteChainId from mainnet.config.json based on the current chain ID
         uint256 remoteChainId = HelperUtils.getUintFromJson(
             vm, configPath, string.concat(".remoteChains.", HelperUtils.uintToStr(block.chainid))
         );

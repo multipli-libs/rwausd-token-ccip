@@ -4,7 +4,7 @@ pragma solidity 0.8.24;
 import {Script, console} from "forge-std/Script.sol";
 import {HelperUtils} from "./utils/HelperUtils.s.sol"; // Utility functions for JSON parsing and chain info
 import {ChainNameResolver} from "./utils/ChainNameResolver.s.sol"; // Chain name resolution utility
-import {RwaUsd} from "src/token/RwaUsd.sol";
+import {rwaUSD} from "src/token/RWAUSD.sol";
 
 contract MintTokens is Script {
     function run() external {
@@ -14,14 +14,14 @@ contract MintTokens is Script {
 
         // Construct paths to the configuration and token JSON files
         string memory root = vm.projectRoot();
-        string memory configPath = vm.envOr("CONFIG_PATH", string.concat(root, "/script/config.json"));
+        string memory configPath = vm.envOr("CONFIG_PATH", string.concat(root, "/script/mainnet.config.json"));
         string memory tokenPath = string.concat(root, "/script/output/deployedToken_", chainName, ".json");
 
         // Extract the token address from the JSON file
         address tokenAddress =
             HelperUtils.getAddressFromJson(vm, tokenPath, string.concat(".deployedToken_", chainName));
 
-        // Read the amount to mint from config.json
+        // Read the amount to mint from mainnet.config.json
         uint256 amount = HelperUtils.getUintFromJson(vm, configPath, ".tokenAmountToMint");
 
         // Use the sender's address as the receiver of the minted tokens
@@ -33,7 +33,7 @@ contract MintTokens is Script {
         vm.startBroadcast();
 
         // Instantiate the token contract at the retrieved address
-        RwaUsd tokenContract = RwaUsd(tokenAddress);
+        rwaUSD tokenContract = rwaUSD(tokenAddress);
 
         // Mint the specified amount of tokens to the receiver address
         console.log("Minting", amount, "tokens to", receiverAddress);
