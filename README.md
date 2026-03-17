@@ -7,7 +7,7 @@ Find a list of available tutorials on the Chainlink documentation: [Cross-Chain 
 ## Table of Contents
 
 1. [Setup](#setup)
-2. [RwaUsd Token (Upgradeable)](#rwausd-token-upgradeable)
+2. [rwaUSD Token (Upgradeable)](#rwausd-token-upgradeable)
 3. [Testing](#testing)
 4. [AcceptAdminRole](#acceptadminrole)
 5. [AddRemotePool](#addremotepool)
@@ -31,11 +31,99 @@ Find a list of available tutorials on the Chainlink documentation: [Cross-Chain 
 
 ## 1. Setup
 
+### Prerequisites
+
+#### 1. Node.js
+
+Make sure you have Node.js v22.10.0 or above installed. Optionally, you can use [nvm](https://github.com/nvm-sh/nvm) to manage Node.js versions:
+
+```bash
+nvm use 22 # if you are using nvm
+```
+
+Verify the correct version is installed:
+
+```bash
+node -v
+```
+
+Example output:
+
+```bash
+$ node -v
+v22.15.0
+```
+
+#### 2. Foundry
+
+If you haven't already, install Foundry by following the [Foundry documentation](https://book.getfoundry.sh/getting-started/installation).
+
+---
+
+### Installation
+
+#### 1. Clone the repository
+
+Clone the repository and navigate to the project directory:
+
+```bash
+git clone https://github.com/multipli-finance/rwausd-token-ccip
+cd rwausd-token-ccip
+```
+
+#### 2. Set up environment variables
+
+Create a `.env` file by copying the provided example:
+
+```bash
+cp .env.example .env
+```
+
+Open the `.env` file and fill in the required values:
+
+```bash
+PRIVATE_KEY=<your_private_key>
+RPC_URL_ETHEREUM_MAINNET=<your_rpc_url_ethereum_mainnet>
+RPC_URL_BASE_MAINNET=<your_rpc_url_base_mainnet>
+ETHERSCAN_API_KEY=<your_etherscan_api_key>
+```
+
+| Variable                   | Description                                                                                                                                                                                                                                                                 |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PRIVATE_KEY`              | The private key for your wallet. If you use MetaMask, follow [this guide](https://support.metamask.io/managing-my-wallet/secret-recovery-phrase-and-private-keys/how-to-export-an-accounts-private-key/) to export your private key. **Required for signing transactions.** |
+| `RPC_URL_ETHEREUM_MAINNET` | The RPC URL for Ethereum Mainnet. Obtain one from [Alchemy](https://www.alchemy.com/) or [Infura](https://infura.io/).                                                                                                                                                      |
+| `RPC_URL_BASE_MAINNET`     | The RPC URL for Base Mainnet. Obtain one from [Alchemy](https://www.alchemy.com/) or [Infura](https://infura.io/).                                                                                                                                                          |
+| `ETHERSCAN_API_KEY`        | An API key from Etherscan to verify your contracts. Obtain one from [Etherscan](https://docs.etherscan.io/getting-started/viewing-api-usage-statistics).                                                                                                                    |
+
+#### 3. Load environment variables
+
+Load the environment variables into your terminal session:
+
+```bash
+source .env
+```
+
+#### 4. Install dependencies
+
+```bash
+forge install && npm install
+```
+
+#### 5. Compile the contracts
+
+```bash
+forge compile
+```
+
+---
+
 ### Config File Overview
 
-The `config.json` file within the `script` directory defines the key parameters used by all scripts. You can customize the token name, symbol, maximum supply, and cross-chain settings, among other fields.
+The `mainnet.config.json` file within the `script` directory defines the key parameters used by all scripts for **mainnet deployments**. You can customize the token name, symbol, maximum supply, and cross-chain settings, among other fields.
 
-Example `config.json` file:
+A separate `testnet.config.json` is also provided for testnet deployments. See the [Testnet Configuration](#testnet-configuration) section below for details.
+
+Example `mainnet.config.json` file:
 
 ```json
 {
@@ -51,147 +139,134 @@ Example `config.json` file:
   "tokenAmountToTransfer": 100000000000000000000,
   "feeType": "native",
   "remoteChains": {
-    "11155111": 43113,
-    "43113": 11155111
+    "1": 8453,
+    "8453": 1
   }
 }
 ```
 
-The `config.json` file contains the following parameters:
+The `mainnet.config.json` file contains the following parameters:
 
-| Field                   | Description                                                                                                                                                                                                                                  |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`                  | The name of the token you are going to deploy.                                                                                                                                                                                               |
-| `symbol`                | The symbol of the token.                                                                                                                                                                                                                     |
-| `decimals`              | The number of decimals for the token (usually `18` for standard ERC tokens).                                                                                                                                                                 |
-| `maxSupply`             | The maximum supply of tokens (in the smallest unit, according to `decimals`). When `maxSupply` is 0, the supply is unlimited.                                                                                                                |
-| `preMint`               | The amount of tokens to be minted to the owner at the time of deployment (in the smallest unit, according to `decimals`). When `preMint` is 0, no tokens will be minted during deployment.                                                   |
-| `ccipAdminAddress`      | The address of the CCIP admin.                                                                                                                                                                                                               |
-| `tokenAmountToMint`     | The amount of tokens to mint when running the minting script (in wei).                                                                                                                                                                       |
-| `tokenAmountToTransfer` | The amount of tokens to transfer when running the token transfer script.                                                                                                                                                                     |
-| `feeType`               | Defines the fee type for transferring tokens across chains. Options are `"link"` or `"native"`.                                                                                                                                              |
-| `remoteChains`          | Defines the relationship between source and remote (destination) chain IDs. Example: `"43113": 421614` means that if you're running a script on Avalanche Fuji (chain ID `43113`), the remote chain is Arbitrum Sepolia (chain ID `421614`). |
-
-### Environment Variables
-
-Example `.env` file:
-
-```bash
-PRIVATE_KEY=<your_private_key>
-RPC_URL_FUJI=<your_rpc_url_fuji>
-RPC_URL_ARBITRUM_SEPOLIA=<your_rpc_url_arbitrum_sepolia>
-ETHERSCAN_API_KEY=<your_etherscan_api_key>
-```
-
-Variables to configure:
-
-- `PRIVATE_KEY`: The private key for your testnet wallet. **Note**: This key is required for signing transactions.
-- `RPC_URL_FUJI`: The RPC URL for the Fuji testnet. You can get this from [Alchemy](https://www.alchemy.com/) or [Infura](https://infura.io/).
-- `RPC_URL_ARBITRUM_SEPOLIA`: The RPC URL for the Arbitrum Sepolia testnet.
-- `ETHERSCAN_API_KEY`: An API key from Etherscan to verify your contracts. Obtain one from [Etherscan](https://docs.etherscan.io/getting-started/viewing-api-usage-statistics).
-
-Load the environment variables into your terminal session:
-
-```bash
-source .env
-```
+| Field                   | Description                                                                                                                                                                                                                    |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name`                  | The name of the token you are going to deploy.                                                                                                                                                                                 |
+| `symbol`                | The symbol of the token.                                                                                                                                                                                                       |
+| `decimals`              | The number of decimals for the token (usually `18` for standard ERC tokens).                                                                                                                                                   |
+| `maxSupply`             | The maximum supply of tokens (in the smallest unit, according to `decimals`). When `maxSupply` is 0, the supply is unlimited.                                                                                                  |
+| `preMint`               | The amount of tokens to be minted to the owner at the time of deployment (in the smallest unit, according to `decimals`). When `preMint` is 0, no tokens will be minted during deployment.                                     |
+| `ccipAdminAddress`      | The address of the CCIP admin.                                                                                                                                                                                                 |
+| `tokenAmountToMint`     | The amount of tokens to mint when running the minting script (in wei).                                                                                                                                                         |
+| `tokenAmountToTransfer` | The amount of tokens to transfer when running the token transfer script.                                                                                                                                                       |
+| `feeType`               | Defines the fee type for transferring tokens across chains. Options are `"link"` or `"native"`.                                                                                                                                |
+| `remoteChains`          | Defines the relationship between source and remote (destination) chain IDs. Example: `"8453": 1` means that if you're running a script on Base Mainnet (chain ID `8453`), the remote chain is Ethereum Mainnet (chain ID `1`). |
 
 ---
 
-## 2. RwaUsd Token (Upgradeable)
+### Testnet Configuration
 
-### Overview
+A separate `testnet.config.json` file is provided for running scripts against testnet environments (Avalanche Fuji and Ethereum Sepolia).
 
-This repository extends the standard Chainlink CCT setup with a custom upgradeable token contract — `RwaUsd` — designed for USD-pegged real-world assets on CCIP-enabled chains.
-
-Instead of deploying the standard `BurnMintERC20`, we created a UUPS-upgradeable version built on top of a custom `BurnMintERC20Upgradeable` base contract.
-
----
-
-### BurnMintERC20Upgradeable
-
-A custom upgradeable base contract that replicates the functionality of Chainlink's [`BurnMintERC20`](https://github.com/smartcontractkit/chainlink-evm/blob/develop/contracts/src/v0.8/shared/token/ERC20/BurnMintERC20.sol) using OpenZeppelin v5.x upgradeable contracts.
-
-#### Key changes from the original `BurnMintERC20`
-
-**1. OpenZeppelin v5.x compatibility**
-
-The contract uses OpenZeppelin Contracts Upgradeable v5.x ([`ERC20BurnableUpgradeable`](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/blob/master/contracts/token/ERC20/extensions/ERC20BurnableUpgradeable.sol), [`AccessControlUpgradeable`](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/blob/master/contracts/access/AccessControlUpgradeable.sol)).
-
-In OZ v5, `_transfer` and the 3-parameter `_approve` are no longer `virtual` and cannot be overridden. The contract adapts as follows:
-
-- `_transfer` recipient check → moved to `_update()` override ([OZ v5 docs](https://docs.openzeppelin.com/contracts/5.x/api/token/erc20#ERC20-_update-address-address-uint256-)):
-
-```solidity
-function _update(address from, address to, uint256 value) internal virtual override {
-    if (to == address(this)) revert InvalidRecipient(to);
-    super._update(from, to, value);
-}
-```
-
-- `_approve` spender check → uses the new 4-parameter virtual override introduced in v5 ([OZ v5 docs](https://docs.openzeppelin.com/contracts/5.x/api/token/erc20#ERC20-_approve-address-address-uint256-bool-)):
-
-```solidity
-function _approve(address owner, address spender, uint256 amount, bool emitEvent) internal virtual override {
-    if (spender == address(this)) revert InvalidRecipient(spender);
-    super._approve(owner, spender, amount, emitEvent);
-}
-```
-
-**2. ERC-7201 namespaced storage**
-
-All state variables (`s_decimals`, `s_maxSupply`, `s_ccipAdmin`) are moved out of sequential storage slots into an [ERC-7201](https://eips.ethereum.org/EIPS/eip-7201) namespaced storage struct. This eliminates the need for `__gap` arrays and prevents storage layout collisions across upgrades:
-
-```solidity
-struct BurnMintERC20Storage {
-    uint8 decimals;
-    uint256 maxSupply;
-    address ccipAdmin;
-}
-
-bytes32 private constant BURN_MINT_ERC20_STORAGE_SLOT =
-    keccak256(abi.encode(uint256(keccak256("burnminterc20.storage.BurnMintERC20Storage")) - 1)) & ~bytes32(uint256(0xff));
-```
-
-**3. Initializer pattern**
-
-The constructor is replaced with an `__BurnMintERC20_init` initializer following the [OZ upgradeable initializer pattern](https://docs.openzeppelin.com/upgrades-plugins/writing-upgradeable#initializers):
-
-```solidity
-function __BurnMintERC20_init(
-    string memory name,
-    string memory symbol,
-    uint8 decimals_,
-    uint256 maxSupply_,
-    uint256 preMint,
-    address admin_
-) internal onlyInitializing
-```
-
----
-
-### RwaUsd
-
-`RwaUsd` extends `BurnMintERC20Upgradeable` with [UUPS upgradeability](https://docs.openzeppelin.com/contracts/5.x/api/proxy#UUPSUpgradeable) via OpenZeppelin's `UUPSUpgradeable`.
-
-#### Key design decisions
-
-- **UUPS proxy pattern** — upgrade logic lives in the implementation contract, gated by `DEFAULT_ADMIN_ROLE`
-- **ERC-7201 storage** — `RwaUsd`-specific state (pause, blocklist) is stored in a separate namespaced struct to avoid layout collisions with the base contract
-- **Single admin** — `DEFAULT_ADMIN_ROLE` is granted only to the provided `admin_` address at initialization; the deployer never holds admin rights
-- **`_disableInitializers()`** — called in the constructor to prevent the implementation contract from being initialized directly
-
-#### Deployment
+By default, all scripts load `mainnet.config.json` (mainnet). To use the testnet config, pass the `CONFIG_PATH` environment variable when invoking any script:
 
 ```bash
-forge script script/DeployToken.s.sol \
+CONFIG_PATH="./script/testnet.config.json" forge script script/<ScriptName>.s.sol \
+  --rpc-url $RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --broadcast
+```
+
+For example, to deploy the token on Ethereum Sepolia using the testnet config:
+
+```bash
+CONFIG_PATH="./script/testnet.config.json" forge script script/DeployToken.s.sol \
   --rpc-url $RPC_URL_SEPOLIA \
   --private-key $PRIVATE_KEY \
   --broadcast \
   --verify
 ```
 
-The deploy script reads the `admin` address from `config.json`:
+---
+
+### Running Tests
+
+The following npm scripts are available for running the test suite:
+
+| Script     | Command                                          | Description                            |
+| ---------- | ------------------------------------------------ | -------------------------------------- |
+| `test`     | `forge clean && forge build && forge test -vvvv` | Full rebuild with verbose test output. |
+| `test:min` | `forge clean && forge build && forge test`       | Full rebuild with minimal test output. |
+
+Run a test script using:
+
+```bash
+npm run test
+```
+
+or for minimal output:
+
+```bash
+npm run test:min
+```
+
+---
+
+## 2. rwaUSD Token (Upgradeable)
+
+### Overview
+
+This repository extends the standard Chainlink CCT setup with a custom upgradeable token contract — `rwaUSD` — designed for USD-pegged real-world assets on CCIP-enabled chains.
+
+Instead of deploying the standard `BurnMintERC20`, we implemented `rwaUSD` as a self-contained UUPS-upgradeable token. It is based on Chainlink's [`BurnMintERC20UUPS`](https://github.com/smartcontractkit/chainlink-evm/blob/develop/contracts/src/v0.8/shared/token/ERC20/upgradeable/BurnMintERC20UUPS.sol) and [`BurnMintERC20PausableUUPS`](https://github.com/smartcontractkit/chainlink-evm/blob/develop/contracts/src/v0.8/shared/token/ERC20/upgradeable/BurnMintERC20PausableUUPS.sol) contracts from the Chainlink EVM repository, but rather than inheriting from these as separate base contracts, all functionality is merged directly into `rwaUSD` as a single self-contained implementation.
+
+---
+
+### rwaUSD
+
+`rwaUSD` combines the mint/burn functionality of `BurnMintERC20UUPS` and the pausable functionality of `BurnMintERC20PausableUUPS` into a single contract, without inheriting from either. It uses OpenZeppelin v5.x upgradeable contracts and follows the UUPS proxy pattern.
+
+#### Key changes from the upstream Chainlink contracts
+
+**1. Self-contained implementation**
+
+In the upstream Chainlink repository, pausable functionality is split across two contracts — `BurnMintERC20UUPS` provides the core mint/burn/role logic, and `BurnMintERC20PausableUUPS` extends it with pause/unpause support. `rwaUSD` merges both into a single file without inheritance from either, making the full implementation self-contained and easier to audit.
+
+**2. Renamed storage struct and namespaced slot**
+
+The upstream `BurnMintERC20UUPS` uses the following storage namespace:
+
+```solidity
+// keccak256(abi.encode(uint256(keccak256("chainlink.storage.BurnMintERC20UUPS")) - 1)) & ~bytes32(uint256(0xff));
+bytes32 private constant BURN_MINT_ERC20_UUPS_STORAGE_LOCATION = ...;
+```
+
+`rwaUSD` uses a project-specific namespace:
+
+```solidity
+// keccak256(abi.encode(uint256(keccak256("multipli.storage.rwaUSD")) - 1)) & ~bytes32(uint256(0xff));
+bytes32 private constant RWAUSD_STORAGE_LOCATION = ...;
+```
+
+The storage struct has also been renamed from `BurnMintERC20UUPSStorage` to `RwaUsdStorage`:
+
+```solidity
+struct RwaUsdStorage {
+    address ccipAdmin;
+    uint8 decimals;
+    uint256 maxSupply;
+}
+```
+
+#### Deployment
+
+```bash
+forge script script/DeployToken.s.sol \
+  --rpc-url $RPC_URL_ETHEREUM_MAINNET \
+  --private-key $PRIVATE_KEY \
+  --broadcast \
+  --verify
+```
+
+The deploy script reads configuration from `mainnet.config.json`:
 
 ```json
 {
@@ -203,13 +278,13 @@ The deploy script reads the `admin` address from `config.json`:
 
 #### Upgrading
 
-To upgrade the proxy to a new implementation, deploy a new contract that extends `RwaUsd` and call `upgradeToAndCall` via the admin:
+To upgrade the proxy to a new implementation, deploy a new contract that extends `rwaUSD` and call `upgradeToAndCall` via the admin:
 
 ```solidity
 token.upgradeToAndCall(newImplementation, "");
 ```
 
-Only the address holding `DEFAULT_ADMIN_ROLE` can authorize upgrades.
+Only the address holding `UPGRADER_ROLE` can authorize upgrades.
 
 ---
 
@@ -217,7 +292,7 @@ Only the address holding `DEFAULT_ADMIN_ROLE` can authorize upgrades.
 
 ### Overview
 
-The test suite covers `RwaUsd` initialization, access control, UUPS upgradeability, and ERC-7201 namespaced storage integrity. All tests run with Foundry and require no live network connection.
+The test suite covers `rwaUSD` initialization, access control, UUPS upgradeability, and ERC-7201 namespaced storage integrity. All tests run with Foundry and require no live network connection.
 
 ### Prerequisites
 
@@ -254,18 +329,18 @@ forge script script/AcceptAdminRole.s.sol --rpc-url $RPC_URL --private-key $PRIV
 
 ### Config Parameters
 
-- **Deployed Token Address**: Read from the output file corresponding to the current chain (e.g., `deployedToken_avalanche_fuji.json`).
+- **Deployed Token Address**: Read from the output file corresponding to the current chain (e.g., `deployedToken_base_mainnet.json`).
 - **TokenAdminRegistry Address**: Retrieved based on the network settings in `HelperConfig.s.sol`.
 
 ### Examples
 
 ```bash
-forge script script/AcceptAdminRole.s.sol --rpc-url $RPC_URL_FUJI --private-key $PRIVATE_KEY --broadcast
+forge script script/AcceptAdminRole.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast
 ```
 
 This will:
 
-- Retrieve the deployed token address from the JSON file for the Fuji network.
+- Retrieve the deployed token address from the JSON file for the Ethereum Mainnet network.
 - Check if the current signer is the pending administrator.
 - Accept the admin role for the token if the signer is the pending administrator.
 
@@ -299,11 +374,11 @@ forge script script/AddRemotePool.s.sol --rpc-url $RPC_URL --private-key $PRIVAT
 ### Examples
 
 ```bash
-forge script script/AddRemotePool.s.sol --rpc-url $RPC_URL_FUJI --private-key $PRIVATE_KEY --broadcast \
+forge script script/AddRemotePool.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast \
   --sig "run(address,uint256,address)" -- \
   0xYourLocalPoolAddress \
-  421614 \
-  0xYourRemotePoolAddressOnArbitrumSepolia
+  8453 \
+  0xYourRemotePoolAddressOnBaseMainnet
 ```
 
 ### Notes
@@ -336,7 +411,7 @@ forge script script/ApplyChainUpdates.s.sol --rpc-url $RPC_URL --private-key $PR
 ### Examples
 
 ```bash
-forge script script/ApplyChainUpdates.s.sol --rpc-url $RPC_URL_FUJI --private-key $PRIVATE_KEY --broadcast
+forge script script/ApplyChainUpdates.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast
 ```
 
 ### Notes
@@ -361,17 +436,17 @@ forge script script/ClaimAdmin.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_K
 ### Config Parameters
 
 - **Deployed Token Address**: Read from the output file for the current chain.
-- **Admin Address**: Read from the `config.json` file (`ccipAdminAddress` field).
+- **Admin Address**: Read from the `mainnet.config.json` file (`ccipAdminAddress` field).
 
 ### Examples
 
 ```bash
-forge script script/ClaimAdmin.s.sol --rpc-url $RPC_URL_FUJI --private-key $PRIVATE_KEY --broadcast
+forge script script/ClaimAdmin.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast
 ```
 
 ### Notes
 
-- Ensure the `ccipAdminAddress` field is correctly set in `config.json` before running this script.
+- Ensure the `ccipAdminAddress` field is correctly set in `mainnet.config.json` before running this script.
 
 ---
 
@@ -395,7 +470,7 @@ forge script script/DeployBurnMintTokenPool.s.sol --rpc-url $RPC_URL --private-k
 ### Examples
 
 ```bash
-forge script script/DeployBurnMintTokenPool.s.sol --rpc-url $RPC_URL_FUJI --private-key $PRIVATE_KEY --broadcast --verify
+forge script script/DeployBurnMintTokenPool.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast --verify
 ```
 
 ### Notes
@@ -424,7 +499,7 @@ forge script script/DeployLockReleaseTokenPool.s.sol --rpc-url $RPC_URL --privat
 ### Examples
 
 ```bash
-forge script script/DeployLockReleaseTokenPool.s.sol --rpc-url $RPC_URL_FUJI --private-key $PRIVATE_KEY --broadcast --verify
+forge script script/DeployLockReleaseTokenPool.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast --verify
 ```
 
 ---
@@ -433,7 +508,7 @@ forge script script/DeployLockReleaseTokenPool.s.sol --rpc-url $RPC_URL_FUJI --p
 
 ### Description
 
-Deploys the `RwaUsd` upgradeable token contract via a UUPS proxy. Reads the admin address from `config.json` and deploys both the implementation and proxy in a single script.
+Deploys the `rwaUSD` upgradeable token contract via a UUPS proxy. Reads the admin address from `mainnet.config.json` and deploys both the implementation and proxy in a single script.
 
 ### Usage
 
@@ -447,7 +522,7 @@ forge script script/DeployToken.s.sol \
 
 ### Config Parameters
 
-The script reads from `config.json`:
+The script reads from `mainnet.config.json`:
 
 ```json
 {
@@ -463,7 +538,7 @@ The script reads from `config.json`:
 
 ```bash
 forge script script/DeployToken.s.sol \
-  --rpc-url $RPC_URL_SEPOLIA \
+  --rpc-url $RPC_URL_ETHEREUM_MAINNET \
   --private-key $PRIVATE_KEY \
   --broadcast \
   --verify
@@ -471,7 +546,7 @@ forge script script/DeployToken.s.sol \
 
 ### Notes
 
-- **Upgradeable Deployment**: The script deploys a UUPS proxy pointing to the `RwaUsd` implementation using the OZ Foundry upgrades plugin.
+- **Upgradeable Deployment**: The script deploys a UUPS proxy pointing to the `rwaUSD` implementation using the OZ Foundry upgrades plugin.
 - **Chain Name**: The deployed proxy address is saved to `script/output/deployedToken_<chainName>.json`.
 
 ---
@@ -497,10 +572,10 @@ forge script script/GetCurrentRateLimits.s.sol:GetCurrentRateLimits --rpc-url $R
 
 ```bash
 forge script script/GetCurrentRateLimits.s.sol:GetCurrentRateLimits \
-  --rpc-url $RPC_URL_FUJI \
+  --rpc-url $RPC_URL_ETHEREUM_MAINNET \
   --sig "run(address,uint256)" -- \
-  0xYourPoolAddressOnFuji \
-  421614
+  0xYourPoolAddressOnEthereumMainnet \
+  8453
 ```
 
 ---
@@ -525,9 +600,9 @@ forge script script/GetPoolConfig.s.sol:GetPoolConfig --rpc-url $RPC_URL --sig "
 
 ```bash
 forge script script/GetPoolConfig.s.sol:GetPoolConfig \
-  --rpc-url $RPC_URL_FUJI \
+  --rpc-url $RPC_URL_ETHEREUM_MAINNET \
   --sig "run(address)" -- \
-  0xYourPoolAddressOnFuji
+  0xYourPoolAddressOnEthereumMainnet
 ```
 
 ### Notes
@@ -540,7 +615,7 @@ forge script script/GetPoolConfig.s.sol:GetPoolConfig \
 
 ### Description
 
-Mints a specified amount of tokens to the sender's address. The amount is pulled from `config.json`.
+Mints a specified amount of tokens to the sender's address. The amount is pulled from `mainnet.config.json`.
 
 ### Usage
 
@@ -551,12 +626,12 @@ forge script script/MintTokens.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_K
 ### Config Parameters
 
 - **Deployed Token Address**: Read from the output file for the current chain.
-- **Mint Amount**: Read from `config.json` (`tokenAmountToMint` field).
+- **Mint Amount**: Read from `mainnet.config.json` (`tokenAmountToMint` field).
 
 ### Examples
 
 ```bash
-forge script script/MintTokens.s.sol --rpc-url $RPC_URL_FUJI --private-key $PRIVATE_KEY --broadcast
+forge script script/MintTokens.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast
 ```
 
 ---
@@ -585,11 +660,11 @@ forge script script/RemoveRemotePool.s.sol --rpc-url $RPC_URL --private-key $PRI
 ### Examples
 
 ```bash
-forge script script/RemoveRemotePool.s.sol --rpc-url $RPC_URL_FUJI --private-key $PRIVATE_KEY --broadcast \
+forge script script/RemoveRemotePool.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast \
   --sig "run(address,uint256,address)" -- \
   0xYourLocalPoolAddress \
-  421614 \
-  0xYourRemotePoolAddressOnArbitrumSepolia
+  8453 \
+  0xYourRemotePoolAddressOnBaseMainnet
 ```
 
 ---
@@ -615,7 +690,7 @@ forge script script/SetPool.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY 
 ### Examples
 
 ```bash
-forge script script/SetPool.s.sol --rpc-url $RPC_URL_FUJI --private-key $PRIVATE_KEY --broadcast
+forge script script/SetPool.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast
 ```
 
 ---
@@ -641,7 +716,7 @@ forge script script/SetRateLimitAdmin.s.sol --rpc-url $RPC_URL --private-key $PR
 ### Examples
 
 ```bash
-forge script script/SetRateLimitAdmin.s.sol --rpc-url $RPC_URL_FUJI --private-key $PRIVATE_KEY --broadcast \
+forge script script/SetRateLimitAdmin.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast \
   --sig "run(address,address)" -- \
   0xYourPoolAddress \
   0xNewAdminAddress
@@ -670,7 +745,7 @@ forge script script/TransferTokenAdminRole.s.sol --rpc-url $RPC_URL --private-ke
 ### Examples
 
 ```bash
-forge script script/TransferTokenAdminRole.s.sol --rpc-url $RPC_URL_FUJI --private-key $PRIVATE_KEY --broadcast \
+forge script script/TransferTokenAdminRole.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast \
   --sig "run(address,address)" -- \
   0xYourTokenAddress \
   0xNewAdminAddress
@@ -688,7 +763,7 @@ forge script script/TransferTokenAdminRole.s.sol --rpc-url $RPC_URL_FUJI --priva
 
 ### Description
 
-Facilitates cross-chain token transfers using Chainlink's CCIP. Reads the token address and amount from `config.json` and handles fee payment in either native tokens or LINK.
+Facilitates cross-chain token transfers using Chainlink's CCIP. Reads the token address and amount from `mainnet.config.json` and handles fee payment in either native tokens or LINK.
 
 ### Usage
 
@@ -699,14 +774,14 @@ forge script script/TransferTokens.s.sol --rpc-url $RPC_URL --private-key $PRIVA
 ### Config Parameters
 
 - **Deployed Token Address**: Read from the output file for the current chain.
-- **Transfer Amount**: Read from `config.json` (`tokenAmountToTransfer` field).
-- **Fee Type**: Specified in `config.json` as `"native"` or `"link"`.
-- **Destination Chain**: Determined from the `remoteChains` field in `config.json`.
+- **Transfer Amount**: Read from `mainnet.config.json` (`tokenAmountToTransfer` field).
+- **Fee Type**: Specified in `mainnet.config.json` as `"native"` or `"link"`.
+- **Destination Chain**: Determined from the `remoteChains` field in `mainnet.config.json`.
 
 ### Examples
 
 ```bash
-forge script script/TransferTokens.s.sol --rpc-url $RPC_URL_FUJI --private-key $PRIVATE_KEY --broadcast
+forge script script/TransferTokens.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast
 ```
 
 ---
@@ -733,7 +808,7 @@ forge script script/UpdateAllowList.s.sol --rpc-url $RPC_URL --private-key $PRIV
 ### Examples
 
 ```bash
-forge script script/UpdateAllowList.s.sol --rpc-url $RPC_URL_FUJI --private-key $PRIVATE_KEY --broadcast \
+forge script script/UpdateAllowList.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast \
   --sig "run(address,address[],address[])" -- \
   0xYourPoolAddress \
   '[0xAddressToAdd1,0xAddressToAdd2]' \
@@ -786,10 +861,10 @@ forge script script/UpdateRateLimiters.s.sol --rpc-url $RPC_URL --private-key $P
 Update both inbound and outbound rate limiters:
 
 ```bash
-forge script script/UpdateRateLimiters.s.sol --rpc-url $RPC_URL_FUJI --private-key $PRIVATE_KEY --broadcast \
+forge script script/UpdateRateLimiters.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast \
   --sig "run(address,uint256,uint8,bool,uint128,uint128,bool,uint128,uint128)" -- \
   <POOL_ADDRESS> \
-  43113 \
+  8453 \
   2 \
   true \
   10000000000000000000 \
@@ -802,10 +877,10 @@ forge script script/UpdateRateLimiters.s.sol --rpc-url $RPC_URL_FUJI --private-k
 Update only the outbound rate limiter:
 
 ```bash
-forge script script/UpdateRateLimiters.s.sol --rpc-url $RPC_URL_FUJI --private-key $PRIVATE_KEY --broadcast \
+forge script script/UpdateRateLimiters.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast \
   --sig "run(address,uint256,uint8,bool,uint128,uint128,bool,uint128,uint128)" -- \
   <POOL_ADDRESS> \
-  43113 \
+  8453 \
   0 \
   true \
   10000000000000000000 \

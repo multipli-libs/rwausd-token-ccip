@@ -20,12 +20,16 @@ contract HelperConfig is Script {
     constructor() {
         if (block.chainid == 11155111) {
             activeNetworkConfig = getEthereumSepoliaConfig();
+        } else if (block.chainid == 1) {
+            activeNetworkConfig = getEthereumMainnetConfig();
         } else if (block.chainid == 421614) {
             activeNetworkConfig = getArbitrumSepolia();
         } else if (block.chainid == 43113) {
             activeNetworkConfig = getAvalancheFujiConfig();
         } else if (block.chainid == 84532) {
             activeNetworkConfig = getBaseSepoliaConfig();
+        } else if (block.chainid == 8453) {
+            activeNetworkConfig = getBaseMainnetConfig();
         } else if (block.chainid == 80002) {
             activeNetworkConfig = getPolygonAmoyConfig();
         } else {
@@ -103,15 +107,47 @@ contract HelperConfig is Script {
         return polygonAmoyConfig;
     }
 
+    function getEthereumMainnetConfig() public pure returns (NetworkConfig memory) {
+        NetworkConfig memory ethereumMainnetConfig = NetworkConfig({
+            chainSelector: 5009297550715157269,
+            router: 0x80226fc0Ee2b096224EeAc085Bb9a8cba1146f7D,
+            rmnProxy: 0x411dE17f12D1A34ecC7F45f49844626267c75e81,
+            tokenAdminRegistry: 0xb22764f98dD05c789929716D677382Df22C05Cb6,
+            registryModuleOwnerCustom: 0x4855174E9479E211337832E109E7721d43A4CA64,
+            link: 0x514910771AF9Ca656af840dff83E8264EcF986CA,
+            confirmations: 2,
+            nativeCurrencySymbol: "ETH"
+        });
+        return ethereumMainnetConfig;
+    }
+
+    function getBaseMainnetConfig() public pure returns (NetworkConfig memory) {
+        NetworkConfig memory baseMainnetConfig = NetworkConfig({
+            chainSelector: 15971525489660198786,
+            router: 0x881e3A65B4d4a04dD529061dd0071cf975F58bCD,
+            rmnProxy: 0xC842c69d54F83170C42C4d556B4F6B2ca53Dd3E8,
+            tokenAdminRegistry: 0x6f6C373d09C07425BaAE72317863d7F6bb731e37,
+            registryModuleOwnerCustom: 0xAFEd606Bd2CAb6983fC6F10167c98aaC2173D77f,
+            link: 0x88Fb150BDc53A65fe94Dea0c9BA0a6dAf8C6e196,
+            confirmations: 2,
+            nativeCurrencySymbol: "ETH"
+        });
+        return baseMainnetConfig;
+    }
+
     function getNetworkConfig(uint256 chainId) public pure returns (NetworkConfig memory) {
         if (chainId == 11155111) {
             return getEthereumSepoliaConfig();
+        } else if (chainId == 1) {
+            return getEthereumMainnetConfig();
         } else if (chainId == 421614) {
             return getArbitrumSepolia();
         } else if (chainId == 43113) {
             return getAvalancheFujiConfig();
         } else if (chainId == 84532) {
             return getBaseSepoliaConfig();
+        } else if (chainId == 8453) {
+            return getBaseMainnetConfig();
         } else if (chainId == 80002) {
             return getPolygonAmoyConfig();
         } else {

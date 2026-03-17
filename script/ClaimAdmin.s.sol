@@ -8,7 +8,7 @@ import {ChainNameResolver} from "./utils/ChainNameResolver.s.sol"; // Chain name
 import {
     RegistryModuleOwnerCustom
 } from "@chainlink/contracts-ccip/contracts/tokenAdminRegistry/RegistryModuleOwnerCustom.sol";
-import {BurnMintERC20} from "@chainlink/contracts/src/v0.8/shared/token/ERC20/BurnMintERC20.sol";
+import {rwaUSD} from "src/token/RWAUSD.sol";
 
 contract ClaimAdmin is Script {
     function run() external {
@@ -19,7 +19,7 @@ contract ClaimAdmin is Script {
         // Define paths to the necessary JSON files
         string memory root = vm.projectRoot();
         string memory deployedTokenPath = string.concat(root, "/script/output/deployedToken_", chainName, ".json");
-        string memory configPath = string.concat(root, "/script/config.json");
+        string memory configPath = vm.envOr("CONFIG_PATH", string.concat(root, "/script/mainnet.config.json"));
 
         // Extract values from the JSON files
         address tokenAddress =
@@ -45,7 +45,7 @@ contract ClaimAdmin is Script {
         internal
     {
         // Instantiate the token contract with CCIP admin functionality
-        BurnMintERC20 tokenContract = BurnMintERC20(tokenAddress);
+        rwaUSD tokenContract = rwaUSD(tokenAddress);
         // Instantiate the registry contract
         RegistryModuleOwnerCustom registryContract = RegistryModuleOwnerCustom(registryModuleOwnerCustom);
 
