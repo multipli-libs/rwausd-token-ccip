@@ -41,7 +41,7 @@ contract rwaUSD is
     // │                         Storage                              │
     // ================================================================
 
-    /// @custom:storage-location erc7201:chainlink.storage.rwaUSD
+    /// @custom:storage-location multipli.storage.rwaUSD
     struct RwaUsdStorage {
         /// @dev the CCIPAdmin can be used to register with the CCIP token admin registry, but has no other special powers,
         /// and can only be transferred by the owner.
@@ -94,6 +94,9 @@ contract rwaUSD is
         address defaultAdmin,
         address defaultUpgrader
     ) internal onlyInitializing {
+        require(defaultAdmin != address(0), "Admin address is 0");
+        require(defaultUpgrader != address(0), "Upgrader address is 0");
+
         __ERC20_init(name, symbol);
         __ERC20Burnable_init();
         __AccessControl_init();
