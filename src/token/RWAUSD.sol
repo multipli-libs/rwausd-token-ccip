@@ -245,16 +245,12 @@ contract rwaUSD is
     /// @dev Requires the caller to have the PAUSER_ROLE.
     function pause() public onlyRole(PAUSER_ROLE) {
         _pause();
-
-        emit Paused(msg.sender);
     }
 
     /// @notice Unpauses the implementation.
     /// @dev Requires the caller to have the DEFAULT_ADMIN_ROLE.
     function unpause() public onlyRole(DEFAULT_ADMIN_ROLE) {
         _unpause();
-
-        emit Unpaused(msg.sender);
     }
 
     // ================================================================
