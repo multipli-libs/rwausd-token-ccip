@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {rwaUSD} from "src/token/rwaUSD.sol";
+import {rwaUSD} from "src/token/RWAUSD.sol";
 import {MockRwaUsdV2} from "./mocks/MockRwaUsdV2.sol";
 import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
