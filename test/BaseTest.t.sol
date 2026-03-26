@@ -41,7 +41,7 @@ contract RwaUsdBaseTest is Test {
             )
         );
 
-        address proxy = Upgrades.deployUUPSProxy("rwaUSD.sol:rwaUSD", data);
+        address proxy = Upgrades.deployUUPSProxy("RWAUSD.sol:rwaUSD", data);
         s_rwausd = rwaUSD(proxy);
         vm.stopPrank();
 
