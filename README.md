@@ -133,7 +133,7 @@ Example `mainnet.config.json` file:
     "decimals": 18,
     "maxSupply": 0, //Unlimited supply
     "preMint": 0,
-    "ccipAdminAddress": "0x928786CD018d7615738dBA48462Be6B57384ddd4"
+    "ccipAdminAddress": "0x8cFee31bf3A57EC2C86D9e0f476Bd36aCA611Fa5"
   },
   "tokenAmountToMint": 1000000000000000000000,
   "tokenAmountToTransfer": 100000000000000000000,
