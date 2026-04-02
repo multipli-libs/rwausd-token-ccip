@@ -17,6 +17,13 @@ contract DeployToken is Script {
 
         address admin = HelperUtils.getAddressFromJson(vm, configPath, ".rwaUSDToken.ccipAdminAddress");
 
+        address deployer = msg.sender;
+        
+        require(deployer == admin, string(abi.encodePacked(
+            "Deployer mismatch: expected ", vm.toString(admin),
+            " but got ", vm.toString(deployer)
+        )));
+
         vm.startBroadcast();
 
         bytes memory data = abi.encodeCall(
