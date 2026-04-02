@@ -19,4 +19,17 @@ remappings = [
 
 fs_permissions = [{ access = "read-write", path = "./" }]
 
+[profile.env]
+# API Keys
+ETHERSCAN_API_KEY = "${ETHERSCAN_API_KEY}"
+
+[rpc_endpoints]
+eth_mainnet = "${RPC_URL_ETHEREUM}"
+eth_testnet = "${RPC_URL_SEPOLIA}"
+anvil = "http://localhost:8545"
+
+[etherscan]
+eth_testnet = { key = "${ETHERSCAN_API_KEY}", url = "${ETHERSCAN_TESTNET_VERIFIER_URL}", chain=11155111 }
+eth_mainnet = { key = "${ETHERSCAN_API_KEY}", url = "${ETHERSCAN_MAINNET_VERIFIER_URL}", chain=1 }
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
