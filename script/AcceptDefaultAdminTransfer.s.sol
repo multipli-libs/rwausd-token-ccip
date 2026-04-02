@@ -19,5 +19,4 @@ contract AcceptDefaultAdminTransfer is Script {
     }
 }
 
-
 //forge script ./script/AcceptDefaultAdminTransfer.s.sol:AcceptDefaultAdminTransfer --rpc-url eth_mainnet --account multipli-deployer --sender 0x8cFee31bf3A57EC2C86D9e0f476Bd36aCA611Fa5 --broadcast -vvvv
