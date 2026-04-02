@@ -5,7 +5,6 @@ cache/
 out/
 
 # Ignores all broadcast logs except specific exclusions
-/broadcast/*/
 /broadcast/**/dry-run/
 /broadcast/**/31337/
 
