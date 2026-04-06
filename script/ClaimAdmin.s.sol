@@ -11,6 +11,8 @@ import {
 import {rwaUSD} from "src/token/RWAUSD.sol";
 
 contract ClaimAdmin is Script {
+    address tokenAdmin = 0x194Ebc1B9B382ef0E6998cAAcE59aF843cf53b99; //Multipli Safe Wallet
+
     function run() external {
         ChainNameResolver resolver = new ChainNameResolver();
         // Get the chain name based on the current chain ID
@@ -24,7 +26,6 @@ contract ClaimAdmin is Script {
         // Extract values from the JSON files
         address tokenAddress =
             HelperUtils.getAddressFromJson(vm, deployedTokenPath, string.concat(".deployedToken_", chainName));
-        address tokenAdmin = HelperUtils.getAddressFromJson(vm, configPath, ".rwaUSDToken.ccipAdminAddress");
 
         // Fetch the network configuration
         HelperConfig helperConfig = new HelperConfig();
@@ -33,21 +34,15 @@ contract ClaimAdmin is Script {
         require(tokenAddress != address(0), "Invalid token address");
         require(registryModuleOwnerCustom != address(0), "Registry module owner custom is not defined for this network");
 
-        vm.startBroadcast();
-
-        claimAdminWithCCIPAdmin(tokenAddress, tokenAdmin, registryModuleOwnerCustom);
-
-        vm.stopBroadcast();
+        logClaimAdminCalldata(tokenAddress, tokenAdmin, registryModuleOwnerCustom);
     }
 
-    // Claim admin role using the token's CCIP admin
-    function claimAdminWithCCIPAdmin(address tokenAddress, address tokenAdmin, address registryModuleOwnerCustom)
+    function logClaimAdminCalldata(address tokenAddress, address tokenAdmin, address registryModuleOwnerCustom)
         internal
+        view
     {
         // Instantiate the token contract with CCIP admin functionality
         rwaUSD tokenContract = rwaUSD(tokenAddress);
-        // Instantiate the registry contract
-        RegistryModuleOwnerCustom registryContract = RegistryModuleOwnerCustom(registryModuleOwnerCustom);
 
         // Get the current CCIP admin of the token
         address tokenContractCCIPAdmin = tokenContract.getCCIPAdmin();
@@ -56,9 +51,15 @@ contract ClaimAdmin is Script {
         // Ensure the CCIP admin matches the expected token admin address
         require(tokenContractCCIPAdmin == tokenAdmin, "CCIP admin of token doesn't match the token admin address.");
 
-        // Register the admin via getCCIPAdmin() function
-        console.log("Claiming admin of the token via getCCIPAdmin() for CCIP admin:", tokenAdmin);
-        registryContract.registerAdminViaGetCCIPAdmin(tokenAddress);
-        console.log("Admin claimed successfully for token:", tokenAddress);
+        // Encode the calldata for registerAdminViaGetCCIPAdmin(address)
+        bytes memory callData =
+            abi.encodeWithSelector(RegistryModuleOwnerCustom.registerAdminViaGetCCIPAdmin.selector, tokenAddress);
+
+        console.log("=== Safe Wallet Transaction ===");
+        console.log("To (registryModuleOwnerCustom):", registryModuleOwnerCustom);
+        console.log("Value: 0");
+        console.log("Calldata:");
+        console.logBytes(callData);
+        console.log("===============================");
     }
 }
