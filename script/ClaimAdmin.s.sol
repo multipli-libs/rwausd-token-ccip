@@ -2,64 +2,105 @@
 pragma solidity 0.8.24;
 
 import {Script, console} from "forge-std/Script.sol";
-import {HelperUtils} from "./utils/HelperUtils.s.sol"; // Utility functions for JSON parsing and chain info
-import {HelperConfig} from "./HelperConfig.s.sol"; // Network configuration helper
-import {ChainNameResolver} from "./utils/ChainNameResolver.s.sol"; // Chain name resolution utility
+import {HelperUtils} from "./utils/HelperUtils.s.sol";
+import {HelperConfig} from "./HelperConfig.s.sol";
+import {ChainNameResolver} from "./utils/ChainNameResolver.s.sol";
 import {
     RegistryModuleOwnerCustom
 } from "@chainlink/contracts-ccip/contracts/tokenAdminRegistry/RegistryModuleOwnerCustom.sol";
 import {rwaUSD} from "src/token/RWAUSD.sol";
 
 contract ClaimAdmin is Script {
-    address tokenAdmin = 0x194Ebc1B9B382ef0E6998cAAcE59aF843cf53b99; //Multipli Safe Wallet
+    address internal constant TOKEN_ADMIN = 0x194Ebc1B9B382ef0E6998cAAcE59aF843cf53b99; // Multipli Safe Wallet
 
-    function run() external {
-        ChainNameResolver resolver = new ChainNameResolver();
-        // Get the chain name based on the current chain ID
-        string memory chainName = resolver.getChainNameSafe(block.chainid);
-
-        // Define paths to the necessary JSON files
-        string memory root = vm.projectRoot();
-        string memory deployedTokenPath = string.concat(root, "/script/output/deployedToken_", chainName, ".json");
-        string memory configPath = vm.envOr("CONFIG_PATH", string.concat(root, "/script/mainnet.config.json"));
-
-        // Extract values from the JSON files
-        address tokenAddress =
-            HelperUtils.getAddressFromJson(vm, deployedTokenPath, string.concat(".deployedToken_", chainName));
-
-        // Fetch the network configuration
-        HelperConfig helperConfig = new HelperConfig();
-        (,,,, address registryModuleOwnerCustom,,,) = helperConfig.activeNetworkConfig();
-
-        require(tokenAddress != address(0), "Invalid token address");
-        require(registryModuleOwnerCustom != address(0), "Registry module owner custom is not defined for this network");
-
-        logClaimAdminCalldata(tokenAddress, tokenAdmin, registryModuleOwnerCustom);
+    struct ClaimAdminConfig {
+        address tokenAddress;
+        address registryModuleOwnerCustom;
+        address tokenAdminRegistry;
+        address tokenAdmin;
     }
 
-    function logClaimAdminCalldata(address tokenAddress, address tokenAdmin, address registryModuleOwnerCustom)
-        internal
-        view
-    {
-        // Instantiate the token contract with CCIP admin functionality
-        rwaUSD tokenContract = rwaUSD(tokenAddress);
+    function run() external {
+        _runInternal(false, address(0));
+    }
 
-        // Get the current CCIP admin of the token
-        address tokenContractCCIPAdmin = tokenContract.getCCIPAdmin();
-        console.log("Current token admin:", tokenContractCCIPAdmin);
+    function runWithPrankedUser(address user) external {
+        _runInternal(true, user);
+    }
 
-        // Ensure the CCIP admin matches the expected token admin address
-        require(tokenContractCCIPAdmin == tokenAdmin, "CCIP admin of token doesn't match the token admin address.");
+    function _runInternal(bool usePrank, address user) internal {
+        ClaimAdminConfig memory config = loadConfig();
+        _validateConfig(config);
 
-        // Encode the calldata for registerAdminViaGetCCIPAdmin(address)
-        bytes memory callData =
-            abi.encodeWithSelector(RegistryModuleOwnerCustom.registerAdminViaGetCCIPAdmin.selector, tokenAddress);
+        bytes memory callData = _buildClaimAdminCalldata(config.tokenAddress);
 
+        _logSafeTransaction(config.registryModuleOwnerCustom, callData);
+
+        if (usePrank) {
+            vm.startPrank(user);
+            _execute(config.registryModuleOwnerCustom, callData);
+            vm.stopPrank();
+        }
+    }
+
+    function loadConfig() public returns (ClaimAdminConfig memory config) {
+        config.tokenAdmin = TOKEN_ADMIN;
+        config.tokenAddress = _loadTokenAddress();
+        config.registryModuleOwnerCustom = _loadRegistryModuleOwnerCustom();
+        config.tokenAdminRegistry = _loadTokenAdminRegistry();
+    }
+
+    function _loadTokenAddress() internal returns (address tokenAddress) {
+        ChainNameResolver resolver = new ChainNameResolver();
+        string memory chainName = resolver.getChainNameSafe(block.chainid);
+
+        string memory root = vm.projectRoot();
+        string memory deployedTokenPath = string.concat(root, "/script/output/deployedToken_", chainName, ".json");
+
+        tokenAddress =
+            HelperUtils.getAddressFromJson(vm, deployedTokenPath, string.concat(".deployedToken_", chainName));
+    }
+
+    function _loadRegistryModuleOwnerCustom() internal returns (address registryModuleOwnerCustom) {
+        HelperConfig helperConfig = new HelperConfig();
+        (,,,, registryModuleOwnerCustom,,,) = helperConfig.activeNetworkConfig();
+    }
+
+    function _loadTokenAdminRegistry() internal returns (address tokenAdminRegistry) {
+        HelperConfig helperConfig = new HelperConfig();
+        (,,, tokenAdminRegistry,,,,) = helperConfig.activeNetworkConfig();
+    }
+
+    function _validateConfig(ClaimAdminConfig memory config) internal view {
+        require(config.tokenAddress != address(0), "Invalid token address");
+        require(
+            config.registryModuleOwnerCustom != address(0),
+            "Registry module owner custom is not defined for this network"
+        );
+
+        require(config.tokenAdminRegistry != address(0), "Token Admin Registry is not defined for this network");
+
+        address currentCCIPAdmin = rwaUSD(config.tokenAddress).getCCIPAdmin();
+        console.log("Current token admin:", currentCCIPAdmin);
+
+        require(currentCCIPAdmin == config.tokenAdmin, "CCIP admin of token doesn't match the token admin address");
+    }
+
+    function _buildClaimAdminCalldata(address tokenAddress) internal pure returns (bytes memory) {
+        return abi.encodeWithSelector(RegistryModuleOwnerCustom.registerAdminViaGetCCIPAdmin.selector, tokenAddress);
+    }
+
+    function _logSafeTransaction(address registryModuleOwnerCustom, bytes memory callData) internal view {
         console.log("=== Safe Wallet Transaction ===");
         console.log("To (registryModuleOwnerCustom):", registryModuleOwnerCustom);
         console.log("Value: 0");
         console.log("Calldata:");
         console.logBytes(callData);
         console.log("===============================");
+    }
+
+    function _execute(address registryModuleOwnerCustom, bytes memory callData) internal {
+        (bool success,) = registryModuleOwnerCustom.call(callData);
+        require(success, "error executing code");
     }
 }
