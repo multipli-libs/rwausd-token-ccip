@@ -12,7 +12,7 @@ contract TestClaimAdminAndAcceptAdmin is Test {
     ClaimAdminAndAcceptAdmin script;
 
     function setUp() public {
-        string memory rpcUrl = vm.envString("RPC_URL_ETHEREUM");
+        string memory rpcUrl = vm.envOr("RPC_URL_ETHEREUM", string("https://ethereum-rpc.publicnode.com"));
         vm.createSelectFork(rpcUrl, BLOCK_NUMBER);
 
         script = new ClaimAdminAndAcceptAdmin();
