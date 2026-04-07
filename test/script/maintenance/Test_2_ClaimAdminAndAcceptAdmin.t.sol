@@ -22,6 +22,16 @@ contract TestClaimAdminAndAcceptAdmin is Test {
         script.runWithPrankedUser(user);
     }
 
+    function test_sanityCheckForVariables() public {
+        ClaimAdminAndAcceptAdmin.ClaimAdminConfig memory scriptConfig = script.loadConfig();
+
+        assertEq(scriptConfig.registryModuleOwnerCustom, 0x4855174E9479E211337832E109E7721d43A4CA64, "registryModuleOwnerCustom sanity check failed");
+        assertEq(scriptConfig.tokenAdminRegistry, 0xb22764f98dD05c789929716D677382Df22C05Cb6, "tokenAdminRegistry sanity check failed");
+        assertEq(scriptConfig.tokenAdmin, 0x194Ebc1B9B382ef0E6998cAAcE59aF843cf53b99, "tokenAdmin sanity check failed");
+        assertEq(scriptConfig.tokenAddress, 0x8Fcd23142047A3073ed332a0Ed07d1e8D2BD5177, "tokenAddress sanity check failed");
+
+    }
+
     function test__beforeRunningScript() public {
         ClaimAdminAndAcceptAdmin.ClaimAdminConfig memory scriptConfig = script.loadConfig();
 
