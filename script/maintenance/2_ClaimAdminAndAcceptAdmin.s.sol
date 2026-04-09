@@ -130,3 +130,21 @@ contract ClaimAdminAndAcceptAdmin is Script {
         require(success, "error executing calldata2");
     }
 }
+
+// forge clean && forge build
+// forge script ./script/maintenance/2_ClaimAdminAndAcceptAdmin.s.sol:ClaimAdminAndAcceptAdmin --rpc-url eth_mainnet
+
+// == Logs ==
+//   Current token admin: 0x194Ebc1B9B382ef0E6998cAAcE59aF843cf53b99
+//   === Safe Wallet Transaction 1 ===
+//   To (registryModuleOwnerCustom): 0x4855174E9479E211337832E109E7721d43A4CA64
+//   Value: 0
+//   Calldata:
+//   0xff12c3540000000000000000000000008fcd23142047a3073ed332a0ed07d1e8d2bd5177
+//   ===============================
+//   === Safe Wallet Transaction 2 ===
+//   To (tokenAdminRegistry): 0xb22764f98dD05c789929716D677382Df22C05Cb6
+//   Value: 0
+//   Calldata:
+//   0x156194da0000000000000000000000008fcd23142047a3073ed332a0ed07d1e8d2bd5177
+//   ===============================
