@@ -1,65 +1,14 @@
 {
-  "../../../EmojiGotchi/foundry/lib/ds-test": {
-    "rev": "e282159d5170298eb2455a6c05280ab5a73a4ef0"
-  },
-  "../../../EmojiGotchi/foundry/lib/openzeppelin-contracts": {
-    "rev": "dbb6104ce834628e473d2173bbc9d47f81a9eec3"
-  },
-  "../../../EmojiGotchi/foundry_final/lib/ds-test": {
-    "rev": "e282159d5170298eb2455a6c05280ab5a73a4ef0"
-  },
-  "../../../EmojiGotchi/foundry_final/lib/openzeppelin-contracts": {
-    "rev": "dbb6104ce834628e473d2173bbc9d47f81a9eec3"
-  },
-  "../../../quiz-game/foundry/lib/ds-test": {
-    "rev": "e282159d5170298eb2455a6c05280ab5a73a4ef0"
-  },
-  "../../../timelocked-contracts/lib/ds-test": {
-    "rev": "e282159d5170298eb2455a6c05280ab5a73a4ef0"
-  },
-  "../../../timelocked-contracts/lib/openzeppelin-contracts": {
-    "rev": "dbb6104ce834628e473d2173bbc9d47f81a9eec3"
-  },
-  "../../ccip-cla-rate-limits/lib/forge-std": {
-    "rev": "978ac6fadb62f5f0b723c996f64be52eddba6801"
-  },
-  "../../estimate-gas/foundry/lib/ccip": {
-    "rev": "f8c6250cef3c557cbd13a0d975388492b0a5b310"
-  },
-  "../../estimate-gas/foundry/lib/forge-std": {
-    "rev": "ae570fec082bfe1c1f45b0acca4a2b4f84d345ce"
-  },
-  "../../token-transfer-using-arbitrary-messaging/lib/forge-std": {
-    "rev": "978ac6fadb62f5f0b723c996f64be52eddba6801"
-  },
-  "lib/ccip": {
-    "tag": {
-      "name": "v2.9.0",
-      "rev": "065ef85b5fa52bb4583ebad9e51c20a977b64e7a"
-    }
-  },
   "lib/forge-std": {
-    "tag": {
-      "name": "v1.15.0",
-      "rev": "0844d7e1fc5e60d77b68e469bff60265f236c398"
-    }
+    "rev": "0844d7e1fc5e60d77b68e469bff60265f236c398"
   },
   "lib/openzeppelin-contracts": {
-    "tag": {
-      "name": "v5.6.1",
-      "rev": "5fd1781b1454fd1ef8e722282f86f9293cacf256"
-    }
+    "rev": "5fd1781b1454fd1ef8e722282f86f9293cacf256"
   },
   "lib/openzeppelin-contracts-upgradeable": {
-    "tag": {
-      "name": "v5.6.1",
-      "rev": "7bf4727aacdbfaa0f36cbd664654d0c9e1dc52bf"
-    }
+    "rev": "7bf4727aacdbfaa0f36cbd664654d0c9e1dc52bf"
   },
   "lib/openzeppelin-foundry-upgrades": {
-    "tag": {
-      "name": "v0.4.0",
-      "rev": "cbce1e00305e943aa1661d43f41e5ac72c662b07"
-    }
+    "rev": "cbce1e00305e943aa1661d43f41e5ac72c662b07"
   }
 }
