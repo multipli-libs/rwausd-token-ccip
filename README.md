@@ -82,18 +82,22 @@ cp .env.example .env
 Open the `.env` file and fill in the required values:
 
 ```bash
-PRIVATE_KEY=<your_private_key>
 RPC_URL_ETHEREUM_MAINNET=<your_rpc_url_ethereum_mainnet>
-RPC_URL_BASE_MAINNET=<your_rpc_url_base_mainnet>
+RPC_URL_ETHEREUM_TESTNET=<your_rpc_url_ethereum_sepolia>
 ETHERSCAN_API_KEY=<your_etherscan_api_key>
+ETHERSCAN_MAINNET_VERIFIER_URL=<your_etherscan_mainnet_verifier_url>
+ETHERSCAN_TESTNET_VERIFIER_URL=<your_etherscan_testnet_verifier_url>
 ```
 
-| Variable                   | Description                                                                                                                                                                                                                                                                 |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PRIVATE_KEY`              | The private key for your wallet. If you use MetaMask, follow [this guide](https://support.metamask.io/managing-my-wallet/secret-recovery-phrase-and-private-keys/how-to-export-an-accounts-private-key/) to export your private key. **Required for signing transactions.** |
-| `RPC_URL_ETHEREUM_MAINNET` | The RPC URL for Ethereum Mainnet. Obtain one from [Alchemy](https://www.alchemy.com/) or [Infura](https://infura.io/).                                                                                                                                                      |
-| `RPC_URL_BASE_MAINNET`     | The RPC URL for Base Mainnet. Obtain one from [Alchemy](https://www.alchemy.com/) or [Infura](https://infura.io/).                                                                                                                                                          |
-| `ETHERSCAN_API_KEY`        | An API key from Etherscan to verify your contracts. Obtain one from [Etherscan](https://docs.etherscan.io/getting-started/viewing-api-usage-statistics).                                                                                                                    |
+These variables are referenced by `foundry.toml` under `[rpc_endpoints]` and `[etherscan]`, which exposes them as the named aliases `eth_mainnet` and `eth_testnet` used directly in scripts.
+
+| Variable                         | Description                                                                                                                                              |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RPC_URL_ETHEREUM_MAINNET`       | The RPC URL for Ethereum Mainnet. Obtain one from [Alchemy](https://www.alchemy.com/) or [Infura](https://infura.io/).                                   |
+| `RPC_URL_ETHEREUM_TESTNET`       | The RPC URL for Ethereum Sepolia testnet. Obtain one from [Alchemy](https://www.alchemy.com/) or [Infura](https://infura.io/).                           |
+| `ETHERSCAN_API_KEY`              | An API key from Etherscan to verify your contracts. Obtain one from [Etherscan](https://docs.etherscan.io/getting-started/viewing-api-usage-statistics). |
+| `ETHERSCAN_MAINNET_VERIFIER_URL` | The Etherscan verifier URL for Ethereum Mainnet (e.g. `https://api.etherscan.io/api`).                                                                   |
+| `ETHERSCAN_TESTNET_VERIFIER_URL` | The Etherscan verifier URL for Sepolia testnet (e.g. `https://api-sepolia.etherscan.io/api`).                                                            |
 
 #### 3. Load environment variables
 
@@ -109,7 +113,31 @@ source .env
 forge install && npm install
 ```
 
-#### 5. Compile the contracts
+#### 5. Set up wallet accounts
+
+Use `cast wallet` to store encrypted keystores. Create one account per network you intend to use:
+
+**Testnets:**
+
+```bash
+cast wallet import avalanche_testnet --interactive
+cast wallet import arbitrum_testnet --interactive
+```
+
+**Mainnets:**
+
+```bash
+cast wallet import ethereum_mainnet --interactive
+cast wallet import base_mainnet --interactive
+```
+
+Each command prompts for a password to encrypt the keystore. Verify your accounts with:
+
+```bash
+cast wallet list
+```
+
+#### 6. Compile the contracts
 
 ```bash
 forge compile
@@ -169,20 +197,29 @@ A separate `testnet.config.json` file is provided for running scripts against te
 By default, all scripts load `mainnet.config.json` (mainnet). To use the testnet config, pass the `CONFIG_PATH` environment variable when invoking any script:
 
 ```bash
-CONFIG_PATH="./script/testnet.config.json" forge script script/<ScriptName>.s.sol \
-  --rpc-url $RPC_URL \
-  --private-key $PRIVATE_KEY \
+CONFIG_PATH="./script/testnet.config.json" forge script script/<ScriptName>.s.sol:<ContractName> \
+  --rpc-url eth_mainnet \
+  --account deployer \
   --broadcast
 ```
 
 For example, to deploy the token on Ethereum Sepolia using the testnet config:
 
 ```bash
-CONFIG_PATH="./script/testnet.config.json" forge script script/DeployToken.s.sol \
-  --rpc-url $RPC_URL_SEPOLIA \
-  --private-key $PRIVATE_KEY \
-  --broadcast \
-  --verify
+CONFIG_PATH="./script/testnet.config.json" forge script script/deployment/DeployToken.s.sol:DeployToken \
+  --rpc-url eth_testnet \
+  --account deployer \
+  --broadcast
+```
+
+To verify the deployed contracts on Etherscan:
+
+```bash
+CONFIG_PATH="./script/testnet.config.json" forge script script/deployment/DeployToken.s.sol:DeployToken \
+  --rpc-url eth_testnet \
+  --account deployer \
+  --verify \
+  --resume
 ```
 
 ---
@@ -259,11 +296,20 @@ struct RwaUsdStorage {
 #### Deployment
 
 ```bash
-forge script script/DeployToken.s.sol \
-  --rpc-url $RPC_URL_ETHEREUM_MAINNET \
-  --private-key $PRIVATE_KEY \
-  --broadcast \
-  --verify
+forge script script/deployment/DeployToken.s.sol:DeployToken \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --broadcast
+```
+
+To verify the deployed contracts on Etherscan:
+
+```bash
+forge script script/deployment/DeployToken.s.sol:DeployToken \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --verify \
+  --resume
 ```
 
 The deploy script reads configuration from `mainnet.config.json`:
@@ -324,7 +370,7 @@ Accepts the admin role for a deployed token via the `TokenAdminRegistry` contrac
 ### Usage
 
 ```bash
-forge script script/AcceptAdminRole.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast
+forge script script/AcceptAdminRole.s.sol:AcceptAdminRole --rpc-url eth_mainnet --account deployer --broadcast
 ```
 
 ### Config Parameters
@@ -335,7 +381,7 @@ forge script script/AcceptAdminRole.s.sol --rpc-url $RPC_URL --private-key $PRIV
 ### Examples
 
 ```bash
-forge script script/AcceptAdminRole.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast
+forge script script/AcceptAdminRole.s.sol:AcceptAdminRole --rpc-url eth_mainnet --account deployer --broadcast
 ```
 
 This will:
@@ -361,7 +407,7 @@ Adds a remote pool to a local token pool's configuration, enabling cross-chain i
 ### Usage
 
 ```bash
-forge script script/AddRemotePool.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast \
+forge script script/AddRemotePool.s.sol:AddRemotePool --rpc-url eth_mainnet --account deployer --broadcast \
   --sig "run(address,uint256,address)" -- <POOL_ADDRESS> <REMOTE_CHAIN_ID> <REMOTE_POOL_ADDRESS>
 ```
 
@@ -374,7 +420,7 @@ forge script script/AddRemotePool.s.sol --rpc-url $RPC_URL --private-key $PRIVAT
 ### Examples
 
 ```bash
-forge script script/AddRemotePool.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast \
+forge script script/AddRemotePool.s.sol:AddRemotePool --rpc-url eth_mainnet --account deployer --broadcast \
   --sig "run(address,uint256,address)" -- \
   0xYourLocalPoolAddress \
   8453 \
@@ -397,7 +443,7 @@ Configures cross-chain parameters for a token pool, including remote pool addres
 ### Usage
 
 ```bash
-forge script script/ApplyChainUpdates.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast
+forge script script/ApplyChainUpdates.s.sol:ApplyChainUpdates --rpc-url eth_mainnet --account deployer --broadcast
 ```
 
 ### Config Parameters
@@ -411,7 +457,7 @@ forge script script/ApplyChainUpdates.s.sol --rpc-url $RPC_URL --private-key $PR
 ### Examples
 
 ```bash
-forge script script/ApplyChainUpdates.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast
+forge script script/ApplyChainUpdates.s.sol:ApplyChainUpdates --rpc-url eth_mainnet --account deployer --broadcast
 ```
 
 ### Notes
@@ -430,7 +476,7 @@ Claims the admin role for a deployed token contract using the `CCIP admin` funct
 ### Usage
 
 ```bash
-forge script script/ClaimAdmin.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast
+forge script script/ClaimAdmin.s.sol:ClaimAdmin --rpc-url eth_mainnet --account deployer --broadcast
 ```
 
 ### Config Parameters
@@ -441,7 +487,7 @@ forge script script/ClaimAdmin.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_K
 ### Examples
 
 ```bash
-forge script script/ClaimAdmin.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast
+forge script script/ClaimAdmin.s.sol:ClaimAdmin --rpc-url eth_mainnet --account deployer --broadcast
 ```
 
 ### Notes
@@ -459,7 +505,7 @@ Deploys a new `BurnMintTokenPool` contract and associates it with an already dep
 ### Usage
 
 ```bash
-forge script script/DeployBurnMintTokenPool.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast --verify
+forge script script/DeployBurnMintTokenPool.s.sol:DeployBurnMintTokenPool --rpc-url eth_mainnet --account deployer --broadcast
 ```
 
 ### Config Parameters
@@ -470,7 +516,15 @@ forge script script/DeployBurnMintTokenPool.s.sol --rpc-url $RPC_URL --private-k
 ### Examples
 
 ```bash
-forge script script/DeployBurnMintTokenPool.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast --verify
+forge script script/DeployBurnMintTokenPool.s.sol:DeployBurnMintTokenPool --rpc-url eth_mainnet --account deployer --broadcast
+```
+
+### Verification
+
+To verify the deployed contracts on Etherscan after deployment:
+
+```bash
+forge script script/DeployBurnMintTokenPool.s.sol:DeployBurnMintTokenPool --rpc-url eth_mainnet --account deployer --verify --resume
 ```
 
 ### Notes
@@ -488,7 +542,7 @@ Deploys a new `LockReleaseTokenPool` contract and associates it with an already 
 ### Usage
 
 ```bash
-forge script script/DeployLockReleaseTokenPool.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast --verify
+forge script script/DeployLockReleaseTokenPool.s.sol:DeployLockReleaseTokenPool --rpc-url eth_mainnet --account deployer --broadcast
 ```
 
 ### Config Parameters
@@ -499,7 +553,15 @@ forge script script/DeployLockReleaseTokenPool.s.sol --rpc-url $RPC_URL --privat
 ### Examples
 
 ```bash
-forge script script/DeployLockReleaseTokenPool.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast --verify
+forge script script/DeployLockReleaseTokenPool.s.sol:DeployLockReleaseTokenPool --rpc-url eth_mainnet --account deployer --broadcast
+```
+
+### Verification
+
+To verify the deployed contracts on Etherscan after deployment:
+
+```bash
+forge script script/DeployLockReleaseTokenPool.s.sol:DeployLockReleaseTokenPool --rpc-url eth_mainnet --account deployer --verify --resume
 ```
 
 ---
@@ -513,11 +575,10 @@ Deploys the `rwaUSD` upgradeable token contract via a UUPS proxy. Reads the admi
 ### Usage
 
 ```bash
-forge script script/DeployToken.s.sol \
-  --rpc-url $RPC_URL \
-  --private-key $PRIVATE_KEY \
-  --broadcast \
-  --verify
+forge script script/deployment/DeployToken.s.sol:DeployToken \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --broadcast
 ```
 
 ### Config Parameters
@@ -537,11 +598,22 @@ The script reads from `mainnet.config.json`:
 ### Examples
 
 ```bash
-forge script script/DeployToken.s.sol \
-  --rpc-url $RPC_URL_ETHEREUM_MAINNET \
-  --private-key $PRIVATE_KEY \
-  --broadcast \
-  --verify
+forge script script/deployment/DeployToken.s.sol:DeployToken \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --broadcast
+```
+
+### Verification
+
+To verify the deployed contracts on Etherscan after deployment:
+
+```bash
+forge script script/deployment/DeployToken.s.sol:DeployToken \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --verify \
+  --resume
 ```
 
 ### Notes
@@ -560,7 +632,7 @@ Retrieves and displays the current inbound and outbound rate limiter states for 
 ### Usage
 
 ```bash
-forge script script/GetCurrentRateLimits.s.sol:GetCurrentRateLimits --rpc-url $RPC_URL --sig "run(address,uint256)" -- <POOL_ADDRESS> <REMOTE_CHAIN_ID>
+forge script script/GetCurrentRateLimits.s.sol:GetCurrentRateLimits --rpc-url eth_mainnet --sig "run(address,uint256)" -- <POOL_ADDRESS> <REMOTE_CHAIN_ID>
 ```
 
 ### Parameters
@@ -572,7 +644,7 @@ forge script script/GetCurrentRateLimits.s.sol:GetCurrentRateLimits --rpc-url $R
 
 ```bash
 forge script script/GetCurrentRateLimits.s.sol:GetCurrentRateLimits \
-  --rpc-url $RPC_URL_ETHEREUM_MAINNET \
+  --rpc-url eth_mainnet \
   --sig "run(address,uint256)" -- \
   0xYourPoolAddressOnEthereumMainnet \
   8453
@@ -589,7 +661,7 @@ Retrieves and displays the current configuration for a deployed token pool, incl
 ### Usage
 
 ```bash
-forge script script/GetPoolConfig.s.sol:GetPoolConfig --rpc-url $RPC_URL --sig "run(address)" -- <POOL_ADDRESS>
+forge script script/GetPoolConfig.s.sol:GetPoolConfig --rpc-url eth_mainnet --sig "run(address)" -- <POOL_ADDRESS>
 ```
 
 ### Parameters
@@ -600,7 +672,7 @@ forge script script/GetPoolConfig.s.sol:GetPoolConfig --rpc-url $RPC_URL --sig "
 
 ```bash
 forge script script/GetPoolConfig.s.sol:GetPoolConfig \
-  --rpc-url $RPC_URL_ETHEREUM_MAINNET \
+  --rpc-url eth_mainnet \
   --sig "run(address)" -- \
   0xYourPoolAddressOnEthereumMainnet
 ```
@@ -620,7 +692,7 @@ Mints a specified amount of tokens to the sender's address. The amount is pulled
 ### Usage
 
 ```bash
-forge script script/MintTokens.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast
+forge script script/MintTokens.s.sol:MintTokens --rpc-url eth_mainnet --account deployer --broadcast
 ```
 
 ### Config Parameters
@@ -631,7 +703,7 @@ forge script script/MintTokens.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_K
 ### Examples
 
 ```bash
-forge script script/MintTokens.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast
+forge script script/MintTokens.s.sol:MintTokens --rpc-url eth_mainnet --account deployer --broadcast
 ```
 
 ---
@@ -647,7 +719,7 @@ Removes a remote pool from a local `TokenPool` contract's configuration, disabli
 ### Usage
 
 ```bash
-forge script script/RemoveRemotePool.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast \
+forge script script/RemoveRemotePool.s.sol:RemoveRemotePool --rpc-url eth_mainnet --account deployer --broadcast \
   --sig "run(address,uint256,address)" -- <POOL_ADDRESS> <REMOTE_CHAIN_ID> <REMOTE_POOL_ADDRESS>
 ```
 
@@ -660,7 +732,7 @@ forge script script/RemoveRemotePool.s.sol --rpc-url $RPC_URL --private-key $PRI
 ### Examples
 
 ```bash
-forge script script/RemoveRemotePool.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast \
+forge script script/RemoveRemotePool.s.sol:RemoveRemotePool --rpc-url eth_mainnet --account deployer --broadcast \
   --sig "run(address,uint256,address)" -- \
   0xYourLocalPoolAddress \
   8453 \
@@ -678,7 +750,7 @@ Sets the pool for a deployed token in the `TokenAdminRegistry` contract.
 ### Usage
 
 ```bash
-forge script script/SetPool.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast
+forge script script/SetPool.s.sol:SetPool --rpc-url eth_mainnet --account deployer --broadcast
 ```
 
 ### Config Parameters
@@ -690,7 +762,7 @@ forge script script/SetPool.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY 
 ### Examples
 
 ```bash
-forge script script/SetPool.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast
+forge script script/SetPool.s.sol:SetPool --rpc-url eth_mainnet --account deployer --broadcast
 ```
 
 ---
@@ -704,7 +776,7 @@ Sets the rate limit administrator for a specified `TokenPool` contract.
 ### Usage
 
 ```bash
-forge script script/SetRateLimitAdmin.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast \
+forge script script/SetRateLimitAdmin.s.sol:SetRateLimitAdmin --rpc-url eth_mainnet --account deployer --broadcast \
   --sig "run(address,address)" -- <POOL_ADDRESS> <ADMIN_ADDRESS>
 ```
 
@@ -716,7 +788,7 @@ forge script script/SetRateLimitAdmin.s.sol --rpc-url $RPC_URL --private-key $PR
 ### Examples
 
 ```bash
-forge script script/SetRateLimitAdmin.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast \
+forge script script/SetRateLimitAdmin.s.sol:SetRateLimitAdmin --rpc-url eth_mainnet --account deployer --broadcast \
   --sig "run(address,address)" -- \
   0xYourPoolAddress \
   0xNewAdminAddress
@@ -733,7 +805,7 @@ Initiates the transfer of the admin role for a specified token to a new administ
 ### Usage
 
 ```bash
-forge script script/TransferTokenAdminRole.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast \
+forge script script/TransferTokenAdminRole.s.sol:TransferTokenAdminRole --rpc-url eth_mainnet --account deployer --broadcast \
   --sig "run(address,address)" -- <TOKEN_ADDRESS> <NEW_ADMIN_ADDRESS>
 ```
 
@@ -745,7 +817,7 @@ forge script script/TransferTokenAdminRole.s.sol --rpc-url $RPC_URL --private-ke
 ### Examples
 
 ```bash
-forge script script/TransferTokenAdminRole.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast \
+forge script script/TransferTokenAdminRole.s.sol:TransferTokenAdminRole --rpc-url eth_mainnet --account deployer --broadcast \
   --sig "run(address,address)" -- \
   0xYourTokenAddress \
   0xNewAdminAddress
@@ -768,7 +840,7 @@ Facilitates cross-chain token transfers using Chainlink's CCIP. Reads the token 
 ### Usage
 
 ```bash
-forge script script/TransferTokens.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast
+forge script script/TransferTokens.s.sol:TransferTokens --rpc-url eth_mainnet --account deployer --broadcast
 ```
 
 ### Config Parameters
@@ -781,7 +853,7 @@ forge script script/TransferTokens.s.sol --rpc-url $RPC_URL --private-key $PRIVA
 ### Examples
 
 ```bash
-forge script script/TransferTokens.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast
+forge script script/TransferTokens.s.sol:TransferTokens --rpc-url eth_mainnet --account deployer --broadcast
 ```
 
 ---
@@ -795,7 +867,7 @@ Updates the allow list for a specified `TokenPool` contract by adding and/or rem
 ### Usage
 
 ```bash
-forge script script/UpdateAllowList.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast \
+forge script script/UpdateAllowList.s.sol:UpdateAllowList --rpc-url eth_mainnet --account deployer --broadcast \
   --sig "run(address,address[],address[])" -- <POOL_ADDRESS> [<ADDRESSES_TO_ADD>] [<ADDRESSES_TO_REMOVE>]
 ```
 
@@ -808,7 +880,7 @@ forge script script/UpdateAllowList.s.sol --rpc-url $RPC_URL --private-key $PRIV
 ### Examples
 
 ```bash
-forge script script/UpdateAllowList.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast \
+forge script script/UpdateAllowList.s.sol:UpdateAllowList --rpc-url eth_mainnet --account deployer --broadcast \
   --sig "run(address,address[],address[])" -- \
   0xYourPoolAddress \
   '[0xAddressToAdd1,0xAddressToAdd2]' \
@@ -831,7 +903,7 @@ Modifies the rate limiter settings for inbound and outbound transfers for a depl
 ### Usage
 
 ```bash
-forge script script/UpdateRateLimiters.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast \
+forge script script/UpdateRateLimiters.s.sol:UpdateRateLimiters --rpc-url eth_mainnet --account deployer --broadcast \
   --sig "run(address,uint256,uint8,bool,uint128,uint128,bool,uint128,uint128)" -- \
   <POOL_ADDRESS> \
   <REMOTE_CHAIN_ID> \
@@ -861,7 +933,7 @@ forge script script/UpdateRateLimiters.s.sol --rpc-url $RPC_URL --private-key $P
 Update both inbound and outbound rate limiters:
 
 ```bash
-forge script script/UpdateRateLimiters.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast \
+forge script script/UpdateRateLimiters.s.sol:UpdateRateLimiters --rpc-url eth_mainnet --account deployer --broadcast \
   --sig "run(address,uint256,uint8,bool,uint128,uint128,bool,uint128,uint128)" -- \
   <POOL_ADDRESS> \
   8453 \
@@ -877,7 +949,7 @@ forge script script/UpdateRateLimiters.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET
 Update only the outbound rate limiter:
 
 ```bash
-forge script script/UpdateRateLimiters.s.sol --rpc-url $RPC_URL_ETHEREUM_MAINNET --private-key $PRIVATE_KEY --broadcast \
+forge script script/UpdateRateLimiters.s.sol:UpdateRateLimiters --rpc-url eth_mainnet --account deployer --broadcast \
   --sig "run(address,uint256,uint8,bool,uint128,uint128,bool,uint128,uint128)" -- \
   <POOL_ADDRESS> \
   8453 \
