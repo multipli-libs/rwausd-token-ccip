@@ -196,8 +196,7 @@ contract rwaUSD is
     /// @dev Disallows minting to address(this) via _beforeTokenTransfer hook.
     /// @dev Increases the total supply.
     function mint(address account, uint256 amount) external override onlyRole(MINTER_ROLE) {
-        RwaUsdStorage storage $ = _getRwaUsdStorage();
-        uint256 _maxSupply = $.maxSupply;
+        uint256 _maxSupply = maxSupply();
         uint256 _totalSupply = totalSupply();
 
         if (_maxSupply != 0 && _totalSupply + amount > _maxSupply) {
