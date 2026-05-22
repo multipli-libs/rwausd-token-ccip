@@ -1,4 +1,10 @@
 {
+  "name": "rwausd-token-ccip",
+  "engines": {
+    "node": "24.16.0",
+    "npm": ">=11.10.0",
+    "yarn": ">=4.12.0"
+  },
   "scripts": {
     "test": "forge clean && forge build && forge test -vvvv",
     "test:min": "forge clean && forge build && forge test"
