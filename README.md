@@ -17,7 +17,28 @@ This repository contains the `rwaUSD` upgradeable token contract and its associa
 
 ### Prerequisites
 
-#### 1. Foundry
+#### 1. Node.js
+
+Make sure you have Node.js v24.16.0 or above installed. The repository includes an [`.nvmrc`](.nvmrc) file, so if you use [nvm](https://github.com/nvm-sh/nvm) you can run:
+
+```bash
+nvm use # automatically picks up .nvmrc
+```
+
+Verify the correct version is installed:
+
+```bash
+node -v
+```
+
+Example output:
+
+```bash
+$ node -v
+v24.16.0
+```
+
+#### 2. Foundry
 
 If you haven't already, install Foundry by following the [Foundry documentation](https://book.getfoundry.sh/getting-started/installation).
 
