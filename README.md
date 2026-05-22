@@ -1,10 +1,8 @@
-# CCIP Self-Serve Tokens
+# rwaUSD Token — CCIP
 
 This repository contains the `rwaUSD` upgradeable token contract and its associated token pool contracts for CCIP 1.6.
 
 > **Scripts have moved.** All deployment and interaction scripts are now maintained in a separate repository: [multipli-finance/rwausd-token-scripts](https://github.com/multipli-finance/rwausd-token-scripts).
-
-Find a list of available tutorials on the Chainlink documentation: [Cross-Chain Token (CCT) Tutorials](http://docs.chain.link/ccip/tutorials/cross-chain-tokens#overview).
 
 ## Table of Contents
 
