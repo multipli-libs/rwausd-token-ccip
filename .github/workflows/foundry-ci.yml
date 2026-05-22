@@ -3,12 +3,15 @@ name: CI
 permissions: {}
 
 on:
-  push:
   pull_request:
+    # This runs when a PR is opened, reopened, or when new commits are pushed (synchronize)
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
+  
 env:
   FOUNDRY_PROFILE: ci
+  RPC_URL_ETHEREUM: ${{ secrets.RPC_URL_ETHEREUM }}
 
 jobs:
   check:

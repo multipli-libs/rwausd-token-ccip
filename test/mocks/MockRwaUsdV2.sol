@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 import {rwaUSD} from "src/token/RWAUSD.sol";
 
-/// @custom:oz-upgrades-from rwaUSD
+/// @custom:oz-upgrades-from src/token/RWAUSD.sol:rwaUSD
 contract MockRwaUsdV2 is rwaUSD {
     //new methods
     uint256 public newVariable;
