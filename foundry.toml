@@ -24,8 +24,8 @@ fs_permissions = [{ access = "read-write", path = "./" }]
 ETHERSCAN_API_KEY = "${ETHERSCAN_API_KEY}"
 
 [rpc_endpoints]
-eth_mainnet = "${RPC_URL_ETHEREUM}"
-eth_testnet = "${RPC_URL_SEPOLIA}"
+eth_mainnet = "${RPC_URL_ETHEREUM_MAINNET}"
+eth_testnet = "${RPC_URL_ETHEREUM_TESTNET}"
 anvil = "http://localhost:8545"
 
 [etherscan]
