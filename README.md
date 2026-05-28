@@ -1,31 +1,15 @@
-# CCIP Self-Serve Tokens
+# rwaUSD Token — CCIP
 
-This repository contains a collection of Foundry scripts designed to simplify interactions with CCIP 1.6 contracts.
+This repository contains the `rwaUSD` upgradeable token contract and its associated token pool contracts for CCIP 1.6.
 
-Find a list of available tutorials on the Chainlink documentation: [Cross-Chain Token (CCT) Tutorials](http://docs.chain.link/ccip/tutorials/cross-chain-tokens#overview).
+> **Scripts have moved.** All deployment and interaction scripts are now maintained in a separate repository: [multipli-finance/rwausd-token-scripts](https://github.com/multipli-finance/rwausd-token-scripts).
 
 ## Table of Contents
 
 1. [Setup](#setup)
 2. [rwaUSD Token (Upgradeable)](#rwausd-token-upgradeable)
 3. [Testing](#testing)
-4. [AcceptAdminRole](#acceptadminrole)
-5. [AddRemotePool](#addremotepool)
-6. [ApplyChainUpdates](#applychainupdates)
-7. [ClaimAdmin](#claimadmin)
-8. [DeployBurnMintTokenPool](#deployburnminttokenpool)
-9. [DeployLockReleaseTokenPool](#deploylockreleasetokenpool)
-10. [DeployToken](#deploytoken)
-11. [GetCurrentRateLimits](#getcurrentratelimits)
-12. [GetPoolConfig](#getpoolconfig)
-13. [MintTokens](#minttokens)
-14. [RemoveRemotePool](#removeremotepool)
-15. [SetPool](#setpool)
-16. [SetRateLimitAdmin](#setratelimitadmin)
-17. [TransferTokenAdminRole](#transfertokenadminrole)
-18. [TransferTokens](#transfertokens)
-19. [UpdateAllowList](#updateallowlist)
-20. [UpdateRateLimiters](#updateratelimiters)
+4. [Scripts](#scripts)
 
 ---
 
@@ -35,10 +19,10 @@ Find a list of available tutorials on the Chainlink documentation: [Cross-Chain 
 
 #### 1. Node.js
 
-Make sure you have Node.js v22.10.0 or above installed. Optionally, you can use [nvm](https://github.com/nvm-sh/nvm) to manage Node.js versions:
+Make sure you have Node.js v24.16.0 or above installed. The repository includes an [`.nvmrc`](.nvmrc) file, so if you use [nvm](https://github.com/nvm-sh/nvm) you can run:
 
 ```bash
-nvm use 22 # if you are using nvm
+nvm use # automatically picks up .nvmrc
 ```
 
 Verify the correct version is installed:
@@ -51,7 +35,7 @@ Example output:
 
 ```bash
 $ node -v
-v22.15.0
+v24.16.0
 ```
 
 #### 2. Foundry
@@ -63,8 +47,6 @@ If you haven't already, install Foundry by following the [Foundry documentation]
 ### Installation
 
 #### 1. Clone the repository
-
-Clone the repository and navigate to the project directory:
 
 ```bash
 git clone https://github.com/multipli-finance/rwausd-token-ccip
@@ -115,23 +97,13 @@ forge install && npm install
 
 #### 5. Set up wallet accounts
 
-Use `cast wallet` to store encrypted keystores. Create one account per network you intend to use:
-
-**Testnets:**
+Use `cast wallet` to store encrypted keystores. Create a keystore for each deployer account you intend to use:
 
 ```bash
-cast wallet import avalanche_testnet --interactive
-cast wallet import arbitrum_testnet --interactive
+cast wallet import deployer --interactive
 ```
 
-**Mainnets:**
-
-```bash
-cast wallet import ethereum_mainnet --interactive
-cast wallet import base_mainnet --interactive
-```
-
-Each command prompts for a password to encrypt the keystore. Verify your accounts with:
+The command prompts for a private key and a password to encrypt the keystore. Verify your accounts with:
 
 ```bash
 cast wallet list
@@ -159,7 +131,7 @@ Example `mainnet.config.json` file:
     "name": "Real World Asset USD",
     "symbol": "rwaUSD",
     "decimals": 18,
-    "maxSupply": 0, //Unlimited supply
+    "maxSupply": 0,
     "preMint": 0,
     "ccipAdminAddress": "0x8cFee31bf3A57EC2C86D9e0f476Bd36aCA611Fa5"
   },
@@ -192,14 +164,15 @@ The `mainnet.config.json` file contains the following parameters:
 
 ### Testnet Configuration
 
-A separate `testnet.config.json` file is provided for running scripts against testnet environments (Avalanche Fuji and Ethereum Sepolia).
+A separate `testnet.config.json` file is provided for running scripts against testnet environments.
 
-By default, all scripts load `mainnet.config.json` (mainnet). To use the testnet config, pass the `CONFIG_PATH` environment variable when invoking any script:
+By default, all scripts load `mainnet.config.json`. To use the testnet config, pass the `CONFIG_PATH` environment variable when invoking any script:
 
 ```bash
 CONFIG_PATH="./script/testnet.config.json" forge script script/<ScriptName>.s.sol:<ContractName> \
-  --rpc-url eth_mainnet \
+  --rpc-url eth_testnet \
   --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
   --broadcast
 ```
 
@@ -209,6 +182,7 @@ For example, to deploy the token on Ethereum Sepolia using the testnet config:
 CONFIG_PATH="./script/testnet.config.json" forge script script/deployment/DeployToken.s.sol:DeployToken \
   --rpc-url eth_testnet \
   --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
   --broadcast
 ```
 
@@ -218,31 +192,9 @@ To verify the deployed contracts on Etherscan:
 CONFIG_PATH="./script/testnet.config.json" forge script script/deployment/DeployToken.s.sol:DeployToken \
   --rpc-url eth_testnet \
   --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
   --verify \
   --resume
-```
-
----
-
-### Running Tests
-
-The following npm scripts are available for running the test suite:
-
-| Script     | Command                                          | Description                            |
-| ---------- | ------------------------------------------------ | -------------------------------------- |
-| `test`     | `forge clean && forge build && forge test -vvvv` | Full rebuild with verbose test output. |
-| `test:min` | `forge clean && forge build && forge test`       | Full rebuild with minimal test output. |
-
-Run a test script using:
-
-```bash
-npm run test
-```
-
-or for minimal output:
-
-```bash
-npm run test:min
 ```
 
 ---
@@ -251,7 +203,7 @@ npm run test:min
 
 ### Overview
 
-This repository extends the standard Chainlink CCT setup with a custom upgradeable token contract — `rwaUSD` — designed for USD-pegged real-world assets on CCIP-enabled chains.
+This repository implements `rwaUSD` — a custom upgradeable token contract designed for USD-pegged real-world assets on CCIP-enabled chains.
 
 Instead of deploying the standard `BurnMintERC20`, we implemented `rwaUSD` as a self-contained UUPS-upgradeable token. It is based on Chainlink's [`BurnMintERC20UUPS`](https://github.com/smartcontractkit/chainlink-evm/blob/develop/contracts/src/v0.8/shared/token/ERC20/upgradeable/BurnMintERC20UUPS.sol) and [`BurnMintERC20PausableUUPS`](https://github.com/smartcontractkit/chainlink-evm/blob/develop/contracts/src/v0.8/shared/token/ERC20/upgradeable/BurnMintERC20PausableUUPS.sol) contracts from the Chainlink EVM repository, but rather than inheriting from these as separate base contracts, all functionality is merged directly into `rwaUSD` as a single self-contained implementation.
 
@@ -299,6 +251,7 @@ struct RwaUsdStorage {
 forge script script/deployment/DeployToken.s.sol:DeployToken \
   --rpc-url eth_mainnet \
   --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
   --broadcast
 ```
 
@@ -308,6 +261,7 @@ To verify the deployed contracts on Etherscan:
 forge script script/deployment/DeployToken.s.sol:DeployToken \
   --rpc-url eth_mainnet \
   --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
   --verify \
   --resume
 ```
@@ -321,6 +275,8 @@ The deploy script reads configuration from `mainnet.config.json`:
   }
 }
 ```
+
+- **`admin`**: The address granted `DEFAULT_ADMIN_ROLE` and set as the CCIP admin. The deployer never holds admin rights.
 
 #### Upgrading
 
@@ -361,227 +317,52 @@ For verbose output showing each test name and any revert reasons:
 forge test -vvv
 ```
 
-## 4. AcceptAdminRole
+The following npm scripts are also available:
 
-### Description
-
-Accepts the admin role for a deployed token via the `TokenAdminRegistry` contract. This script reads the token address from a JSON file and uses the `TokenAdminRegistry` contract to accept the admin role if the signer is the pending administrator for the token.
-
-### Usage
+| Script     | Command                                          | Description                            |
+| ---------- | ------------------------------------------------ | -------------------------------------- |
+| `test`     | `forge clean && forge build && forge test -vvvv` | Full rebuild with verbose test output. |
+| `test:min` | `forge clean && forge build && forge test`       | Full rebuild with minimal test output. |
 
 ```bash
-forge script script/AcceptAdminRole.s.sol:AcceptAdminRole --rpc-url eth_mainnet --account deployer --broadcast
+npm run test
 ```
 
-### Config Parameters
-
-- **Deployed Token Address**: Read from the output file corresponding to the current chain (e.g., `deployedToken_base_mainnet.json`).
-- **TokenAdminRegistry Address**: Retrieved based on the network settings in `HelperConfig.s.sol`.
-
-### Examples
+or for minimal output:
 
 ```bash
-forge script script/AcceptAdminRole.s.sol:AcceptAdminRole --rpc-url eth_mainnet --account deployer --broadcast
-```
-
-This will:
-
-- Retrieve the deployed token address from the JSON file for the Ethereum Mainnet network.
-- Check if the current signer is the pending administrator.
-- Accept the admin role for the token if the signer is the pending administrator.
-
-### Notes
-
-- **Config-based Execution**: Ensure the token is deployed before running this script.
-- **Pending Administrator Check**: Only the pending administrator can accept the admin role.
-- **Chain Name**: The script automatically determines the current chain based on `block.chainid`.
-
----
-
-## 5. AddRemotePool
-
-### Description
-
-Adds a remote pool to a local token pool's configuration, enabling cross-chain interactions with the specified remote pool.
-
-### Usage
-
-```bash
-forge script script/AddRemotePool.s.sol:AddRemotePool --rpc-url eth_mainnet --account deployer --broadcast \
-  --sig "run(address,uint256,address)" -- <POOL_ADDRESS> <REMOTE_CHAIN_ID> <REMOTE_POOL_ADDRESS>
-```
-
-### Parameters
-
-- **poolAddress**: The address of the local `TokenPool` contract.
-- **remoteChainId**: The chain ID of the remote blockchain.
-- **remotePoolAddress**: The address of the remote pool contract.
-
-### Examples
-
-```bash
-forge script script/AddRemotePool.s.sol:AddRemotePool --rpc-url eth_mainnet --account deployer --broadcast \
-  --sig "run(address,uint256,address)" -- \
-  0xYourLocalPoolAddress \
-  8453 \
-  0xYourRemotePoolAddressOnBaseMainnet
-```
-
-### Notes
-
-- **Network Configuration**: The script uses `HelperConfig.s.sol` and `HelperUtils.s.sol` to map `remoteChainId` to a `remoteChainSelector`.
-- **Permissions**: The account executing the script must have the necessary permissions to call `addRemotePool`.
-
----
-
-## 6. ApplyChainUpdates
-
-### Description
-
-Configures cross-chain parameters for a token pool, including remote pool addresses and rate limiting settings for token transfers between chains.
-
-### Usage
-
-```bash
-forge script script/ApplyChainUpdates.s.sol:ApplyChainUpdates --rpc-url eth_mainnet --account deployer --broadcast
-```
-
-### Config Parameters
-
-- **Deployed Local Pool Address**: Read from the output file for the current chain.
-- **Deployed Remote Pool Address**: Read from the JSON file for the remote chain.
-- **Deployed Remote Token Address**: Read from the JSON file for the remote chain.
-- **Remote Chain Selector**: Fetched from `HelperConfig.s.sol`.
-- **Rate Limiter Configuration**: Disabled by default.
-
-### Examples
-
-```bash
-forge script script/ApplyChainUpdates.s.sol:ApplyChainUpdates --rpc-url eth_mainnet --account deployer --broadcast
-```
-
-### Notes
-
-- **Config-based Execution**: Ensure both the local and remote pools/tokens are deployed before running this script.
-- **Rate Limiting**: Disabled by default but can be enabled by modifying the script's rate limiter configurations.
-
----
-
-## 7. ClaimAdmin
-
-### Description
-
-Claims the admin role for a deployed token contract using the `CCIP admin` function.
-
-### Usage
-
-```bash
-forge script script/ClaimAdmin.s.sol:ClaimAdmin --rpc-url eth_mainnet --account deployer --broadcast
-```
-
-### Config Parameters
-
-- **Deployed Token Address**: Read from the output file for the current chain.
-- **Admin Address**: Read from the `mainnet.config.json` file (`ccipAdminAddress` field).
-
-### Examples
-
-```bash
-forge script script/ClaimAdmin.s.sol:ClaimAdmin --rpc-url eth_mainnet --account deployer --broadcast
-```
-
-### Notes
-
-- Ensure the `ccipAdminAddress` field is correctly set in `mainnet.config.json` before running this script.
-
----
-
-## 8. DeployBurnMintTokenPool
-
-### Description
-
-Deploys a new `BurnMintTokenPool` contract and associates it with an already deployed token. Assigns mint and burn roles to the pool on the token contract.
-
-### Usage
-
-```bash
-forge script script/DeployBurnMintTokenPool.s.sol:DeployBurnMintTokenPool --rpc-url eth_mainnet --account deployer --broadcast
-```
-
-### Config Parameters
-
-- **Deployed Token Address**: Read from the output file for the current chain.
-- **Router and RMN Proxy**: Retrieved from `HelperConfig.s.sol`.
-
-### Examples
-
-```bash
-forge script script/DeployBurnMintTokenPool.s.sol:DeployBurnMintTokenPool --rpc-url eth_mainnet --account deployer --broadcast
-```
-
-### Verification
-
-To verify the deployed contracts on Etherscan after deployment:
-
-```bash
-forge script script/DeployBurnMintTokenPool.s.sol:DeployBurnMintTokenPool --rpc-url eth_mainnet --account deployer --verify --resume
-```
-
-### Notes
-
-- **Grant Mint & Burn Roles**: After deploying the token pool, mint and burn roles are automatically granted to the pool.
-
----
-
-## 9. DeployLockReleaseTokenPool
-
-### Description
-
-Deploys a new `LockReleaseTokenPool` contract and associates it with an already deployed token.
-
-### Usage
-
-```bash
-forge script script/DeployLockReleaseTokenPool.s.sol:DeployLockReleaseTokenPool --rpc-url eth_mainnet --account deployer --broadcast
-```
-
-### Config Parameters
-
-- **Deployed Token Address**: Read from the output file for the current chain.
-- **Router and RMN Proxy**: Retrieved from `HelperConfig.s.sol`.
-
-### Examples
-
-```bash
-forge script script/DeployLockReleaseTokenPool.s.sol:DeployLockReleaseTokenPool --rpc-url eth_mainnet --account deployer --broadcast
-```
-
-### Verification
-
-To verify the deployed contracts on Etherscan after deployment:
-
-```bash
-forge script script/DeployLockReleaseTokenPool.s.sol:DeployLockReleaseTokenPool --rpc-url eth_mainnet --account deployer --verify --resume
+npm run test:min
 ```
 
 ---
 
-## 10. DeployToken
+## 4. Scripts
 
-### Description
+All deployment and interaction scripts (deploy token, deploy pools, claim admin, configure cross-chain settings, transfer tokens, etc.) have been moved to a dedicated repository:
 
-Deploys the `rwaUSD` upgradeable token contract via a UUPS proxy. Reads the admin address from `mainnet.config.json` and deploys both the implementation and proxy in a single script.
+**[https://github.com/multipli-finance/rwausd-token-scripts](https://github.com/multipli-finance/rwausd-token-scripts)**
 
-### Usage
+Refer to that repository for setup instructions and the full config file structure. The sections below document each script's usage.
+
+---
+
+### DeployToken
+
+#### Description
+
+Deploys the `rwaUSD` UUPS proxy and implementation, reads configuration from `mainnet.config.json`, and saves the deployed proxy address to `script/output/deployedToken_<chainName>.json`.
+
+#### Usage
 
 ```bash
 forge script script/deployment/DeployToken.s.sol:DeployToken \
   --rpc-url eth_mainnet \
   --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
   --broadcast
 ```
 
-### Config Parameters
+#### Config Parameters
 
 The script reads from `mainnet.config.json`:
 
@@ -595,16 +376,7 @@ The script reads from `mainnet.config.json`:
 
 - **`admin`**: The address granted `DEFAULT_ADMIN_ROLE` and set as the CCIP admin. The deployer never holds admin rights.
 
-### Examples
-
-```bash
-forge script script/deployment/DeployToken.s.sol:DeployToken \
-  --rpc-url eth_mainnet \
-  --account deployer \
-  --broadcast
-```
-
-### Verification
+#### Verification
 
 To verify the deployed contracts on Etherscan after deployment:
 
@@ -612,35 +384,301 @@ To verify the deployed contracts on Etherscan after deployment:
 forge script script/deployment/DeployToken.s.sol:DeployToken \
   --rpc-url eth_mainnet \
   --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
   --verify \
   --resume
 ```
 
-### Notes
+#### Notes
 
 - **Upgradeable Deployment**: The script deploys a UUPS proxy pointing to the `rwaUSD` implementation using the OZ Foundry upgrades plugin.
 - **Chain Name**: The deployed proxy address is saved to `script/output/deployedToken_<chainName>.json`.
 
 ---
 
-## 11. GetCurrentRateLimits
+### AcceptAdminRole
 
-### Description
+#### Description
+
+Accepts the pending admin role for a deployed token contract in the `TokenAdminRegistry`.
+
+#### Usage
+
+```bash
+forge script script/AcceptAdminRole.s.sol:AcceptAdminRole \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast
+```
+
+#### Config Parameters
+
+- **Deployed Token Address**: Read from the output file corresponding to the current chain (e.g., `deployedToken_mainnet.json`).
+- **TokenAdminRegistry Address**: Retrieved based on the network settings in `HelperConfig.s.sol`.
+
+#### Examples
+
+```bash
+forge script script/AcceptAdminRole.s.sol:AcceptAdminRole \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast
+```
+
+This will:
+
+- Retrieve the deployed token address from the JSON file for the Ethereum Mainnet network.
+- Check if the current signer is the pending administrator.
+- Accept the admin role for the token if the signer is the pending administrator.
+
+#### Notes
+
+- **Config-based Execution**: Ensure the token is deployed before running this script.
+- **Pending Administrator Check**: Only the pending administrator can accept the admin role.
+- **Chain Name**: The script automatically determines the current chain based on `block.chainid`.
+
+---
+
+### AddRemotePool
+
+#### Description
+
+Adds a remote pool to a local token pool's configuration, enabling cross-chain interactions with the specified remote pool.
+
+#### Usage
+
+```bash
+forge script script/AddRemotePool.s.sol:AddRemotePool \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast \
+  --sig "run(address,uint256,address)" -- <POOL_ADDRESS> <REMOTE_CHAIN_ID> <REMOTE_POOL_ADDRESS>
+```
+
+#### Parameters
+
+- **poolAddress**: The address of the local `TokenPool` contract.
+- **remoteChainId**: The chain ID of the remote blockchain.
+- **remotePoolAddress**: The address of the remote pool contract.
+
+#### Examples
+
+```bash
+forge script script/AddRemotePool.s.sol:AddRemotePool \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast \
+  --sig "run(address,uint256,address)" -- \
+  0xYourLocalPoolAddress \
+  8453 \
+  0xYourRemotePoolAddressOnBaseMainnet
+```
+
+#### Notes
+
+- **Network Configuration**: The script uses `HelperConfig.s.sol` and `HelperUtils.s.sol` to map `remoteChainId` to a `remoteChainSelector`.
+- **Permissions**: The account executing the script must have the necessary permissions to call `addRemotePool`.
+
+---
+
+### ApplyChainUpdates
+
+#### Description
+
+Configures cross-chain parameters for a token pool, including remote pool addresses and rate limiting settings for token transfers between chains.
+
+#### Usage
+
+```bash
+forge script script/ApplyChainUpdates.s.sol:ApplyChainUpdates \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast
+```
+
+#### Config Parameters
+
+- **Deployed Local Pool Address**: Read from the output file for the current chain.
+- **Deployed Remote Pool Address**: Read from the JSON file for the remote chain.
+- **Deployed Remote Token Address**: Read from the JSON file for the remote chain.
+- **Remote Chain Selector**: Fetched from `HelperConfig.s.sol`.
+- **Rate Limiter Configuration**: Disabled by default.
+
+#### Examples
+
+```bash
+forge script script/ApplyChainUpdates.s.sol:ApplyChainUpdates \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast
+```
+
+#### Notes
+
+- **Config-based Execution**: Ensure both the local and remote pools/tokens are deployed before running this script.
+- **Rate Limiting**: Disabled by default but can be enabled by modifying the script's rate limiter configurations.
+
+---
+
+### ClaimAdmin
+
+#### Description
+
+Claims the admin role for a deployed token contract using the `CCIP admin` function.
+
+#### Usage
+
+```bash
+forge script script/ClaimAdmin.s.sol:ClaimAdmin \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast
+```
+
+#### Config Parameters
+
+- **Deployed Token Address**: Read from the output file for the current chain.
+- **Admin Address**: Read from the `mainnet.config.json` file (`ccipAdminAddress` field).
+
+#### Examples
+
+```bash
+forge script script/ClaimAdmin.s.sol:ClaimAdmin \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast
+```
+
+#### Notes
+
+- Ensure the `ccipAdminAddress` field is correctly set in `mainnet.config.json` before running this script.
+
+---
+
+### DeployBurnMintTokenPool
+
+#### Description
+
+Deploys a new `BurnMintTokenPool` contract and associates it with an already deployed token. Assigns mint and burn roles to the pool on the token contract.
+
+#### Usage
+
+```bash
+forge script script/DeployBurnMintTokenPool.s.sol:DeployBurnMintTokenPool \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast
+```
+
+#### Config Parameters
+
+- **Deployed Token Address**: Read from the output file for the current chain.
+- **Router and RMN Proxy**: Retrieved from `HelperConfig.s.sol`.
+
+#### Examples
+
+```bash
+forge script script/DeployBurnMintTokenPool.s.sol:DeployBurnMintTokenPool \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast
+```
+
+#### Verification
+
+To verify the deployed contracts on Etherscan after deployment:
+
+```bash
+forge script script/DeployBurnMintTokenPool.s.sol:DeployBurnMintTokenPool \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --verify \
+  --resume
+```
+
+#### Notes
+
+- **Grant Mint & Burn Roles**: After deploying the token pool, mint and burn roles are automatically granted to the pool.
+
+---
+
+### DeployLockReleaseTokenPool
+
+#### Description
+
+Deploys a new `LockReleaseTokenPool` contract and associates it with an already deployed token.
+
+#### Usage
+
+```bash
+forge script script/DeployLockReleaseTokenPool.s.sol:DeployLockReleaseTokenPool \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast
+```
+
+#### Config Parameters
+
+- **Deployed Token Address**: Read from the output file for the current chain.
+- **Router and RMN Proxy**: Retrieved from `HelperConfig.s.sol`.
+
+#### Examples
+
+```bash
+forge script script/DeployLockReleaseTokenPool.s.sol:DeployLockReleaseTokenPool \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast
+```
+
+#### Verification
+
+To verify the deployed contracts on Etherscan after deployment:
+
+```bash
+forge script script/DeployLockReleaseTokenPool.s.sol:DeployLockReleaseTokenPool \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --verify \
+  --resume
+```
+
+---
+
+### GetCurrentRateLimits
+
+#### Description
 
 Retrieves and displays the current inbound and outbound rate limiter states for a given `TokenPool` contract and a specified remote chain.
 
-### Usage
+#### Usage
 
 ```bash
-forge script script/GetCurrentRateLimits.s.sol:GetCurrentRateLimits --rpc-url eth_mainnet --sig "run(address,uint256)" -- <POOL_ADDRESS> <REMOTE_CHAIN_ID>
+forge script script/GetCurrentRateLimits.s.sol:GetCurrentRateLimits \
+  --rpc-url eth_mainnet \
+  --sig "run(address,uint256)" -- <POOL_ADDRESS> <REMOTE_CHAIN_ID>
 ```
 
-### Parameters
+#### Parameters
 
 - **poolAddress**: The address of the `TokenPool` contract.
 - **remoteChainId**: The chain ID of the remote chain.
 
-### Examples
+#### Examples
 
 ```bash
 forge script script/GetCurrentRateLimits.s.sol:GetCurrentRateLimits \
@@ -652,23 +690,25 @@ forge script script/GetCurrentRateLimits.s.sol:GetCurrentRateLimits \
 
 ---
 
-## 12. GetPoolConfig
+### GetPoolConfig
 
-### Description
+#### Description
 
 Retrieves and displays the current configuration for a deployed token pool, including remote pool addresses, rate limiter settings, and allow list information.
 
-### Usage
+#### Usage
 
 ```bash
-forge script script/GetPoolConfig.s.sol:GetPoolConfig --rpc-url eth_mainnet --sig "run(address)" -- <POOL_ADDRESS>
+forge script script/GetPoolConfig.s.sol:GetPoolConfig \
+  --rpc-url eth_mainnet \
+  --sig "run(address)" -- <POOL_ADDRESS>
 ```
 
-### Parameters
+#### Parameters
 
 - **poolAddress**: The address of the token pool.
 
-### Examples
+#### Examples
 
 ```bash
 forge script script/GetPoolConfig.s.sol:GetPoolConfig \
@@ -677,62 +717,78 @@ forge script script/GetPoolConfig.s.sol:GetPoolConfig \
   0xYourPoolAddressOnEthereumMainnet
 ```
 
-### Notes
+#### Notes
 
 - **No Transactions**: This script only reads data and does not broadcast any transactions.
 
 ---
 
-## 13. MintTokens
+### MintTokens
 
-### Description
+#### Description
 
 Mints a specified amount of tokens to the sender's address. The amount is pulled from `mainnet.config.json`.
 
-### Usage
+#### Usage
 
 ```bash
-forge script script/MintTokens.s.sol:MintTokens --rpc-url eth_mainnet --account deployer --broadcast
+forge script script/MintTokens.s.sol:MintTokens \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast
 ```
 
-### Config Parameters
+#### Config Parameters
 
 - **Deployed Token Address**: Read from the output file for the current chain.
 - **Mint Amount**: Read from `mainnet.config.json` (`tokenAmountToMint` field).
 
-### Examples
+#### Examples
 
 ```bash
-forge script script/MintTokens.s.sol:MintTokens --rpc-url eth_mainnet --account deployer --broadcast
+forge script script/MintTokens.s.sol:MintTokens \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast
 ```
 
 ---
 
-## 14. RemoveRemotePool
+### RemoveRemotePool
 
-### Description
+#### Description
 
 Removes a remote pool from a local `TokenPool` contract's configuration, disabling cross-chain interactions with the specified remote pool.
 
 > **Warning**: Removing a remote pool will reject all inflight transactions from that pool.
 
-### Usage
+#### Usage
 
 ```bash
-forge script script/RemoveRemotePool.s.sol:RemoveRemotePool --rpc-url eth_mainnet --account deployer --broadcast \
+forge script script/RemoveRemotePool.s.sol:RemoveRemotePool \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast \
   --sig "run(address,uint256,address)" -- <POOL_ADDRESS> <REMOTE_CHAIN_ID> <REMOTE_POOL_ADDRESS>
 ```
 
-### Parameters
+#### Parameters
 
 - **poolAddress**: The address of the local `TokenPool` contract.
 - **remoteChainId**: The chain ID of the remote blockchain.
 - **remotePoolAddress**: The address of the remote pool to remove.
 
-### Examples
+#### Examples
 
 ```bash
-forge script script/RemoveRemotePool.s.sol:RemoveRemotePool --rpc-url eth_mainnet --account deployer --broadcast \
+forge script script/RemoveRemotePool.s.sol:RemoveRemotePool \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast \
   --sig "run(address,uint256,address)" -- \
   0xYourLocalPoolAddress \
   8453 \
@@ -741,54 +797,70 @@ forge script script/RemoveRemotePool.s.sol:RemoveRemotePool --rpc-url eth_mainne
 
 ---
 
-## 15. SetPool
+### SetPool
 
-### Description
+#### Description
 
 Sets the pool for a deployed token in the `TokenAdminRegistry` contract.
 
-### Usage
+#### Usage
 
 ```bash
-forge script script/SetPool.s.sol:SetPool --rpc-url eth_mainnet --account deployer --broadcast
+forge script script/SetPool.s.sol:SetPool \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast
 ```
 
-### Config Parameters
+#### Config Parameters
 
 - **Deployed Token Address**: Read from the output file for the current chain.
 - **Deployed Pool Address**: Read from the output file for the current chain.
 - **TokenAdminRegistry Address**: Retrieved from `HelperConfig.s.sol`.
 
-### Examples
+#### Examples
 
 ```bash
-forge script script/SetPool.s.sol:SetPool --rpc-url eth_mainnet --account deployer --broadcast
+forge script script/SetPool.s.sol:SetPool \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast
 ```
 
 ---
 
-## 16. SetRateLimitAdmin
+### SetRateLimitAdmin
 
-### Description
+#### Description
 
 Sets the rate limit administrator for a specified `TokenPool` contract.
 
-### Usage
+#### Usage
 
 ```bash
-forge script script/SetRateLimitAdmin.s.sol:SetRateLimitAdmin --rpc-url eth_mainnet --account deployer --broadcast \
+forge script script/SetRateLimitAdmin.s.sol:SetRateLimitAdmin \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast \
   --sig "run(address,address)" -- <POOL_ADDRESS> <ADMIN_ADDRESS>
 ```
 
-### Parameters
+#### Parameters
 
 - **poolAddress**: The address of the `TokenPool` contract.
 - **adminAddress**: The address to assign as the new rate limit administrator.
 
-### Examples
+#### Examples
 
 ```bash
-forge script script/SetRateLimitAdmin.s.sol:SetRateLimitAdmin --rpc-url eth_mainnet --account deployer --broadcast \
+forge script script/SetRateLimitAdmin.s.sol:SetRateLimitAdmin \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast \
   --sig "run(address,address)" -- \
   0xYourPoolAddress \
   0xNewAdminAddress
@@ -796,34 +868,42 @@ forge script script/SetRateLimitAdmin.s.sol:SetRateLimitAdmin --rpc-url eth_main
 
 ---
 
-## 17. TransferTokenAdminRole
+### TransferTokenAdminRole
 
-### Description
+#### Description
 
 Initiates the transfer of the admin role for a specified token to a new administrator via the `TokenAdminRegistry` contract. The new admin must call `acceptAdminRole` to complete the transfer.
 
-### Usage
+#### Usage
 
 ```bash
-forge script script/TransferTokenAdminRole.s.sol:TransferTokenAdminRole --rpc-url eth_mainnet --account deployer --broadcast \
+forge script script/TransferTokenAdminRole.s.sol:TransferTokenAdminRole \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast \
   --sig "run(address,address)" -- <TOKEN_ADDRESS> <NEW_ADMIN_ADDRESS>
 ```
 
-### Parameters
+#### Parameters
 
 - **tokenAddress**: The address of the token.
 - **newAdmin**: The address of the new administrator.
 
-### Examples
+#### Examples
 
 ```bash
-forge script script/TransferTokenAdminRole.s.sol:TransferTokenAdminRole --rpc-url eth_mainnet --account deployer --broadcast \
+forge script script/TransferTokenAdminRole.s.sol:TransferTokenAdminRole \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast \
   --sig "run(address,address)" -- \
   0xYourTokenAddress \
   0xNewAdminAddress
 ```
 
-### Notes
+#### Notes
 
 - **Two-Step Process**:
   1. The current admin calls `transferAdminRole` to propose the new admin.
@@ -831,79 +911,99 @@ forge script script/TransferTokenAdminRole.s.sol:TransferTokenAdminRole --rpc-ur
 
 ---
 
-## 18. TransferTokens
+### TransferTokens
 
-### Description
+#### Description
 
 Facilitates cross-chain token transfers using Chainlink's CCIP. Reads the token address and amount from `mainnet.config.json` and handles fee payment in either native tokens or LINK.
 
-### Usage
+#### Usage
 
 ```bash
-forge script script/TransferTokens.s.sol:TransferTokens --rpc-url eth_mainnet --account deployer --broadcast
+forge script script/TransferTokens.s.sol:TransferTokens \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast
 ```
 
-### Config Parameters
+#### Config Parameters
 
 - **Deployed Token Address**: Read from the output file for the current chain.
 - **Transfer Amount**: Read from `mainnet.config.json` (`tokenAmountToTransfer` field).
 - **Fee Type**: Specified in `mainnet.config.json` as `"native"` or `"link"`.
 - **Destination Chain**: Determined from the `remoteChains` field in `mainnet.config.json`.
 
-### Examples
+#### Examples
 
 ```bash
-forge script script/TransferTokens.s.sol:TransferTokens --rpc-url eth_mainnet --account deployer --broadcast
+forge script script/TransferTokens.s.sol:TransferTokens \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast
 ```
 
 ---
 
-## 19. UpdateAllowList
+### UpdateAllowList
 
-### Description
+#### Description
 
 Updates the allow list for a specified `TokenPool` contract by adding and/or removing addresses.
 
-### Usage
+#### Usage
 
 ```bash
-forge script script/UpdateAllowList.s.sol:UpdateAllowList --rpc-url eth_mainnet --account deployer --broadcast \
+forge script script/UpdateAllowList.s.sol:UpdateAllowList \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast \
   --sig "run(address,address[],address[])" -- <POOL_ADDRESS> [<ADDRESSES_TO_ADD>] [<ADDRESSES_TO_REMOVE>]
 ```
 
-### Parameters
+#### Parameters
 
 - **poolAddress**: The address of the `TokenPool` contract.
 - **addressesToAdd**: An array of addresses to add to the allow list.
 - **addressesToRemove**: An array of addresses to remove from the allow list.
 
-### Examples
+#### Examples
 
 ```bash
-forge script script/UpdateAllowList.s.sol:UpdateAllowList --rpc-url eth_mainnet --account deployer --broadcast \
+forge script script/UpdateAllowList.s.sol:UpdateAllowList \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast \
   --sig "run(address,address[],address[])" -- \
   0xYourPoolAddress \
   '[0xAddressToAdd1,0xAddressToAdd2]' \
   '[0xAddressToRemove]'
 ```
 
-### Notes
+#### Notes
 
 - **Allow List Must Be Enabled**: The pool must have been deployed with allow list functionality enabled.
 - Pass an empty array `'[]'` for either parameter if no addresses need to be added or removed.
 
 ---
 
-## 20. UpdateRateLimiters
+### UpdateRateLimiters
 
-### Description
+#### Description
 
 Modifies the rate limiter settings for inbound and outbound transfers for a deployed token pool.
 
-### Usage
+#### Usage
 
 ```bash
-forge script script/UpdateRateLimiters.s.sol:UpdateRateLimiters --rpc-url eth_mainnet --account deployer --broadcast \
+forge script script/UpdateRateLimiters.s.sol:UpdateRateLimiters \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast \
   --sig "run(address,uint256,uint8,bool,uint128,uint128,bool,uint128,uint128)" -- \
   <POOL_ADDRESS> \
   <REMOTE_CHAIN_ID> \
@@ -916,7 +1016,7 @@ forge script script/UpdateRateLimiters.s.sol:UpdateRateLimiters --rpc-url eth_ma
   <INBOUND_RATE_LIMIT_RATE>
 ```
 
-### Parameters
+#### Parameters
 
 - **poolAddress**: The address of the token pool.
 - **remoteChainId**: The chain ID of the remote blockchain.
@@ -928,12 +1028,16 @@ forge script script/UpdateRateLimiters.s.sol:UpdateRateLimiters --rpc-url eth_ma
 - **inboundRateLimitCapacity**: Maximum token capacity for the inbound rate limiter (in wei).
 - **inboundRateLimitRate**: Refill rate for the inbound rate limiter (in wei per second).
 
-### Examples
+#### Examples
 
 Update both inbound and outbound rate limiters:
 
 ```bash
-forge script script/UpdateRateLimiters.s.sol:UpdateRateLimiters --rpc-url eth_mainnet --account deployer --broadcast \
+forge script script/UpdateRateLimiters.s.sol:UpdateRateLimiters \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast \
   --sig "run(address,uint256,uint8,bool,uint128,uint128,bool,uint128,uint128)" -- \
   <POOL_ADDRESS> \
   8453 \
@@ -949,7 +1053,11 @@ forge script script/UpdateRateLimiters.s.sol:UpdateRateLimiters --rpc-url eth_ma
 Update only the outbound rate limiter:
 
 ```bash
-forge script script/UpdateRateLimiters.s.sol:UpdateRateLimiters --rpc-url eth_mainnet --account deployer --broadcast \
+forge script script/UpdateRateLimiters.s.sol:UpdateRateLimiters \
+  --rpc-url eth_mainnet \
+  --account deployer \
+  --sender <YOUR_DEPLOYER_ADDRESS> \
+  --broadcast \
   --sig "run(address,uint256,uint8,bool,uint128,uint128,bool,uint128,uint128)" -- \
   <POOL_ADDRESS> \
   8453 \
@@ -962,7 +1070,7 @@ forge script script/UpdateRateLimiters.s.sol:UpdateRateLimiters --rpc-url eth_ma
   0
 ```
 
-### Notes
+#### Notes
 
 - **Capacity and Rate**: Capacity is the maximum token bucket size; rate is the refill speed in tokens per second.
 - **Units**: All values are in the smallest token unit (wei).

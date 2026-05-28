@@ -71,4 +71,23 @@ contract TestApprove is RwaUsdBaseTest {
         vm.prank(s_alice);
         s_rwausd.approve(s_bob, AMOUNT);
     }
+
+    function test_Approve_AllowsRevokeWhenPaused() public {
+        vm.prank(s_minter);
+        s_rwausd.mint(s_alice, AMOUNT);
+
+        vm.prank(s_alice);
+        s_rwausd.approve(s_bob, AMOUNT);
+
+        vm.prank(s_pauser);
+        s_rwausd.pause();
+
+        vm.expectEmit();
+        emit IERC20.Approval(s_alice, s_bob, 0);
+
+        vm.prank(s_alice);
+        s_rwausd.approve(s_bob, 0);
+
+        assertEq(s_rwausd.allowance(s_alice, s_bob), 0);
+    }
 }

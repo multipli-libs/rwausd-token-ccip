@@ -12,7 +12,6 @@ import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/Pau
 import {
     ERC20BurnableUpgradeable
 } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
-import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC1822Proxiable} from "@openzeppelin/contracts/interfaces/draft-IERC1822.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
@@ -139,14 +138,14 @@ contract rwaUSD is
     /// @inheritdoc IERC165
     function supportsInterface(bytes4 interfaceId)
         public
-        pure
+        view
         virtual
         override(AccessControlDefaultAdminRulesUpgradeable, IERC165)
         returns (bool)
     {
         return interfaceId == type(IERC20).interfaceId || interfaceId == type(IBurnMintERC20).interfaceId
-            || interfaceId == type(IERC165).interfaceId || interfaceId == type(IAccessControl).interfaceId
-            || interfaceId == type(IERC1822Proxiable).interfaceId || interfaceId == type(IGetCCIPAdmin).interfaceId;
+            || interfaceId == type(IERC1822Proxiable).interfaceId || interfaceId == type(IGetCCIPAdmin).interfaceId
+            || super.supportsInterface(interfaceId);
     }
 
     // ================================================================
@@ -197,7 +196,7 @@ contract rwaUSD is
     /// @dev Disallows minting to address(this) via _beforeTokenTransfer hook.
     /// @dev Increases the total supply.
     function mint(address account, uint256 amount) external override onlyRole(MINTER_ROLE) {
-        uint256 _maxSupply = _getRwaUsdStorage().maxSupply;
+        uint256 _maxSupply = maxSupply();
         uint256 _totalSupply = totalSupply();
 
         if (_maxSupply != 0 && _totalSupply + amount > _maxSupply) {
@@ -266,7 +265,7 @@ contract rwaUSD is
 
     /// @dev Disallows approving if implementation is paused.
     function _approve(address owner, address spender, uint256 value, bool emitEvent) internal virtual override {
-        _requireNotPaused();
+        if (value != 0) _requireNotPaused();
         if (spender == address(this)) revert RwaUsd__InvalidRecipient(spender);
 
         super._approve(owner, spender, value, emitEvent);
