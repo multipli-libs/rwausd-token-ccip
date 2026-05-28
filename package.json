@@ -1,4 +1,5 @@
 {
+  "version": "0.0.0",
   "name": "rwausd-token-ccip",
   "engines": {
     "node": "24.16.0",
@@ -7,7 +8,10 @@
   },
   "scripts": {
     "test": "forge clean && forge build && forge test -vvvv",
-    "test:min": "forge clean && forge build && forge test"
+    "test:min": "forge clean && forge build && forge test",
+    "bump:patch": "./bash_helpers/bump_version.sh --type=patch",
+    "bump:minor": "./bash_helpers/bump_version.sh --type=minor",
+    "bump:major": "./bash_helpers/bump_version.sh --type=major"
   },
   "dependencies": {
     "@chainlink/contracts": "1.4.0",
