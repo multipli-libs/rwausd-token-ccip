@@ -100,11 +100,10 @@ contract rwaUSD is
         __ERC20Burnable_init();
         __AccessControl_init();
         __AccessControlDefaultAdminRules_init(1 hours, defaultAdmin);
+        __Pausable_init();
         __RwaUsd_init_unchained(decimals_, maxSupply_, preMint, defaultAdmin, defaultUpgrader);
     }
 
-    /// @custom:oz-upgrades-unsafe-allow missing-initializer-call
-    // reference: https://forum.openzeppelin.com/t/potential-false-positive-missing-initializer-calls-for-one-or-more-parent-contracts/43911/3
     function __RwaUsd_init_unchained(
         uint8 decimals_,
         uint256 maxSupply_,
