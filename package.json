@@ -7,6 +7,7 @@
     "yarn": ">=4.12.0"
   },
   "scripts": {
+    "setup": "bash bash_helpers/setup.sh",
     "test": "forge clean && forge build && forge test -vvvv",
     "test:min": "forge clean && forge build && forge test",
     "bump:patch": "./bash_helpers/bump_version.sh --type=patch",
