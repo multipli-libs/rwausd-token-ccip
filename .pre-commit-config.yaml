@@ -1,0 +1,6 @@
+repos:
+  - repo: https://github.com/multipli-finance/multipli-smartcontract-hooks
+    rev: v1.0.0
+    hooks:
+      - id: forge-fmt
+      - id: slither

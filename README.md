@@ -1,19 +1,53 @@
 # rwaUSD Token — CCIP
 
-This repository contains the `rwaUSD` upgradeable token contract and its associated token pool contracts for CCIP 1.6.
+This repository contains the `rwaUSD` upgradeable token contract for CCIP 1.6. Cross-chain transfers use Chainlink's stock [`BurnMintTokenPool`](https://github.com/smartcontractkit/chainlink-ccip) contract from `@chainlink/contracts-ccip`.
 
-> **Scripts have moved.** All deployment and interaction scripts are now maintained in a separate repository: [multipli-finance/rwausd-token-scripts](https://github.com/multipli-finance/rwausd-token-scripts).
+> **Scripts have moved.** All deployment and interaction scripts are maintained in a separate repository: [multipli-finance/rwausd-token-scripts](https://github.com/multipli-finance/rwausd-token-scripts).
 
 ## Table of Contents
 
-1. [Setup](#setup)
-2. [rwaUSD Token (Upgradeable)](#rwausd-token-upgradeable)
-3. [Testing](#testing)
-4. [Scripts](#scripts)
+1. [Deployed Addresses](#deployed-addresses)
+2. [Setup](#setup)
+3. [rwaUSD Token (Upgradeable)](#rwausd-token-upgradeable)
+4. [Testing](#testing)
+5. [Scripts](#scripts)
+6. [Version Bumping](#version-bumping)
+7. [Pre-commit Hooks](#pre-commit-hooks)
 
 ---
 
-## 1. Setup
+## 1. Deployed Addresses
+
+| Network  | rwaUSD Token                                 | BurnMintTokenPool                            |
+| -------- | -------------------------------------------- | -------------------------------------------- |
+| Ethereum | `0x8Fcd23142047A3073ed332a0Ed07d1e8D2BD5177` | `0x7f49a388c6884c0d1706f7774e9a5575d100aa63` |
+| Base     | `0x272Ec977f4575df41cD47b1b254954E1C7972789` | `0x7Dc0496016d88c3EbA6d54D1514F24B3C9872894` |
+| Ink      | `0x2A66Bb2dA3AD1c854E79307F64b862DECD860D4c` | `0xd74FB32112b1eF5b4C428Fead8dA8d85A0019009` |
+
+**Bridges (CCIP lanes):**
+
+- Ethereum &harr; Base
+- Ethereum &harr; Ink
+
+---
+
+## 2. Setup
+
+### Quick Setup
+
+After cloning the repo, you can run the setup script instead of doing the steps below manually:
+
+```bash
+npm run setup
+```
+
+This runs [`bash_helpers/setup.sh`](bash_helpers/setup.sh), which:
+
+- Runs `nvm use` to pick up the Node version from `.nvmrc` (if `nvm` is installed)
+- Runs `forge install && npm install` to install dependencies
+- Copies `.env.example` to `.env` if a `.env` doesn't already exist
+
+You'll still need to set up your wallet accounts — see below.
 
 ### Prerequisites
 
@@ -53,49 +87,13 @@ git clone https://github.com/multipli-finance/rwausd-token-ccip
 cd rwausd-token-ccip
 ```
 
-#### 2. Set up environment variables
-
-Create a `.env` file by copying the provided example:
-
-```bash
-cp .env.example .env
-```
-
-Open the `.env` file and fill in the required values:
-
-```bash
-RPC_URL_ETHEREUM_MAINNET=<your_rpc_url_ethereum_mainnet>
-RPC_URL_ETHEREUM_TESTNET=<your_rpc_url_ethereum_sepolia>
-ETHERSCAN_API_KEY=<your_etherscan_api_key>
-ETHERSCAN_MAINNET_VERIFIER_URL=<your_etherscan_mainnet_verifier_url>
-ETHERSCAN_TESTNET_VERIFIER_URL=<your_etherscan_testnet_verifier_url>
-```
-
-These variables are referenced by `foundry.toml` under `[rpc_endpoints]` and `[etherscan]`, which exposes them as the named aliases `eth_mainnet` and `eth_testnet` used directly in scripts.
-
-| Variable                         | Description                                                                                                                                              |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `RPC_URL_ETHEREUM_MAINNET`       | The RPC URL for Ethereum Mainnet. Obtain one from [Alchemy](https://www.alchemy.com/) or [Infura](https://infura.io/).                                   |
-| `RPC_URL_ETHEREUM_TESTNET`       | The RPC URL for Ethereum Sepolia testnet. Obtain one from [Alchemy](https://www.alchemy.com/) or [Infura](https://infura.io/).                           |
-| `ETHERSCAN_API_KEY`              | An API key from Etherscan to verify your contracts. Obtain one from [Etherscan](https://docs.etherscan.io/getting-started/viewing-api-usage-statistics). |
-| `ETHERSCAN_MAINNET_VERIFIER_URL` | The Etherscan verifier URL for Ethereum Mainnet (e.g. `https://api.etherscan.io/api`).                                                                   |
-| `ETHERSCAN_TESTNET_VERIFIER_URL` | The Etherscan verifier URL for Sepolia testnet (e.g. `https://api-sepolia.etherscan.io/api`).                                                            |
-
-#### 3. Load environment variables
-
-Load the environment variables into your terminal session:
-
-```bash
-source .env
-```
-
-#### 4. Install dependencies
+#### 2. Install dependencies
 
 ```bash
 forge install && npm install
 ```
 
-#### 5. Set up wallet accounts
+#### 3. Set up wallet accounts
 
 Use `cast wallet` to store encrypted keystores. Create a keystore for each deployer account you intend to use:
 
@@ -109,7 +107,7 @@ The command prompts for a private key and a password to encrypt the keystore. Ve
 cast wallet list
 ```
 
-#### 6. Compile the contracts
+#### 4. Compile the contracts
 
 ```bash
 forge compile
@@ -117,89 +115,7 @@ forge compile
 
 ---
 
-### Config File Overview
-
-The `mainnet.config.json` file within the `script` directory defines the key parameters used by all scripts for **mainnet deployments**. You can customize the token name, symbol, maximum supply, and cross-chain settings, among other fields.
-
-A separate `testnet.config.json` is also provided for testnet deployments. See the [Testnet Configuration](#testnet-configuration) section below for details.
-
-Example `mainnet.config.json` file:
-
-```json
-{
-  "rwaUSDToken": {
-    "name": "Real World Asset USD",
-    "symbol": "rwaUSD",
-    "decimals": 18,
-    "maxSupply": 0,
-    "preMint": 0,
-    "ccipAdminAddress": "0x8cFee31bf3A57EC2C86D9e0f476Bd36aCA611Fa5"
-  },
-  "tokenAmountToMint": 1000000000000000000000,
-  "tokenAmountToTransfer": 100000000000000000000,
-  "feeType": "native",
-  "remoteChains": {
-    "1": 8453,
-    "8453": 1
-  }
-}
-```
-
-The `mainnet.config.json` file contains the following parameters:
-
-| Field                   | Description                                                                                                                                                                                                                    |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `name`                  | The name of the token you are going to deploy.                                                                                                                                                                                 |
-| `symbol`                | The symbol of the token.                                                                                                                                                                                                       |
-| `decimals`              | The number of decimals for the token (usually `18` for standard ERC tokens).                                                                                                                                                   |
-| `maxSupply`             | The maximum supply of tokens (in the smallest unit, according to `decimals`). When `maxSupply` is 0, the supply is unlimited.                                                                                                  |
-| `preMint`               | The amount of tokens to be minted to the owner at the time of deployment (in the smallest unit, according to `decimals`). When `preMint` is 0, no tokens will be minted during deployment.                                     |
-| `ccipAdminAddress`      | The address of the CCIP admin.                                                                                                                                                                                                 |
-| `tokenAmountToMint`     | The amount of tokens to mint when running the minting script (in wei).                                                                                                                                                         |
-| `tokenAmountToTransfer` | The amount of tokens to transfer when running the token transfer script.                                                                                                                                                       |
-| `feeType`               | Defines the fee type for transferring tokens across chains. Options are `"link"` or `"native"`.                                                                                                                                |
-| `remoteChains`          | Defines the relationship between source and remote (destination) chain IDs. Example: `"8453": 1` means that if you're running a script on Base Mainnet (chain ID `8453`), the remote chain is Ethereum Mainnet (chain ID `1`). |
-
----
-
-### Testnet Configuration
-
-A separate `testnet.config.json` file is provided for running scripts against testnet environments.
-
-By default, all scripts load `mainnet.config.json`. To use the testnet config, pass the `CONFIG_PATH` environment variable when invoking any script:
-
-```bash
-CONFIG_PATH="./script/testnet.config.json" forge script script/<ScriptName>.s.sol:<ContractName> \
-  --rpc-url eth_testnet \
-  --account deployer \
-  --sender <YOUR_DEPLOYER_ADDRESS> \
-  --broadcast
-```
-
-For example, to deploy the token on Ethereum Sepolia using the testnet config:
-
-```bash
-CONFIG_PATH="./script/testnet.config.json" forge script script/deployment/DeployToken.s.sol:DeployToken \
-  --rpc-url eth_testnet \
-  --account deployer \
-  --sender <YOUR_DEPLOYER_ADDRESS> \
-  --broadcast
-```
-
-To verify the deployed contracts on Etherscan:
-
-```bash
-CONFIG_PATH="./script/testnet.config.json" forge script script/deployment/DeployToken.s.sol:DeployToken \
-  --rpc-url eth_testnet \
-  --account deployer \
-  --sender <YOUR_DEPLOYER_ADDRESS> \
-  --verify \
-  --resume
-```
-
----
-
-## 2. rwaUSD Token (Upgradeable)
+## 3. rwaUSD Token (Upgradeable)
 
 ### Overview
 
@@ -247,36 +163,7 @@ struct RwaUsdStorage {
 
 #### Deployment
 
-```bash
-forge script script/deployment/DeployToken.s.sol:DeployToken \
-  --rpc-url eth_mainnet \
-  --account deployer \
-  --sender <YOUR_DEPLOYER_ADDRESS> \
-  --broadcast
-```
-
-To verify the deployed contracts on Etherscan:
-
-```bash
-forge script script/deployment/DeployToken.s.sol:DeployToken \
-  --rpc-url eth_mainnet \
-  --account deployer \
-  --sender <YOUR_DEPLOYER_ADDRESS> \
-  --verify \
-  --resume
-```
-
-The deploy script reads configuration from `mainnet.config.json`:
-
-```json
-{
-  "rwaUSDToken": {
-    "admin": "0xYourAdminAddress"
-  }
-}
-```
-
-- **`admin`**: The address granted `DEFAULT_ADMIN_ROLE` and set as the CCIP admin. The deployer never holds admin rights.
+Deployment now happens via the [rwausd-token-scripts](https://github.com/multipli-finance/rwausd-token-scripts) repo — see its README for the deploy scripts and config file format.
 
 #### Upgrading
 
@@ -290,7 +177,7 @@ Only the address holding `UPGRADER_ROLE` can authorize upgrades.
 
 ---
 
-## 3. Testing
+## 4. Testing
 
 ### Overview
 
@@ -336,10 +223,58 @@ npm run test:min
 
 ---
 
-## 4. Scripts
+## 5. Scripts
 
 All deployment and interaction scripts (deploy token, deploy pools, claim admin, configure cross-chain settings, transfer tokens, etc.) have been moved to a dedicated repository:
 
 **[https://github.com/multipli-finance/rwausd-token-scripts](https://github.com/multipli-finance/rwausd-token-scripts)**
 
 Refer to that repository's README for setup instructions, config file structure, and usage examples for each script.
+
+---
+
+## 6. Version Bumping
+
+Package version is bumped via [`bash_helpers/bump_version.sh`](bash_helpers/bump_version.sh), wrapped by npm scripts:
+
+```bash
+npm run bump:patch
+npm run bump:minor
+npm run bump:major
+```
+
+Each of these:
+
+1. Runs `npm version <type>`, bumping `package.json` and creating a git commit + tag (message: `v<version>: <msg>`, defaults to `Version bump (<type>)`).
+2. Pushes the current branch to `origin`.
+3. Pushes the new tag to `origin`.
+
+To use a custom commit message, call the script directly:
+
+```bash
+./bash_helpers/bump_version.sh --type=minor -m "Add Base bridging support"
+```
+
+> **Note:** This pushes to `origin` automatically — make sure you're on the intended branch before running it.
+
+---
+
+## 7. Pre-commit Hooks
+
+This repo uses [pre-commit](https://pre-commit.com/) with shared hooks from [`multipli-smartcontract-hooks`](https://github.com/multipli-finance/multipli-smartcontract-hooks) (see [`.pre-commit-config.yaml`](.pre-commit-config.yaml)):
+
+- `forge-fmt` — enforces Foundry formatting on staged Solidity files
+- `slither` — runs static analysis on staged Solidity files
+
+### Install
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+Once installed, the hooks run automatically on `git commit`. To run them manually against all files:
+
+```bash
+pre-commit run --all-files
+```
