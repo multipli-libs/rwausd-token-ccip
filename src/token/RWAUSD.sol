@@ -28,13 +28,24 @@ contract rwaUSD is
 {
     error RwaUsd__MaxSupplyExceeded(uint256 supplyAfterMint);
     error RwaUsd__InvalidRecipient(address recipient);
+    /// @notice Thrown when an address argument is not a valid target for the operation.
+    error RwaUsd__InvalidAddress(address account);
+    /// @notice Thrown when an operation involves an account that is frozen.
+    error RwaUsd__AccountFrozen(address account);
+    /// @notice Thrown when unfreezing an account that is not currently frozen.
+    error RwaUsd__AccountNotFrozen(address account);
 
     event CCIPAdminTransferred(address indexed previousAdmin, address indexed newAdmin);
+    /// @notice Emitted when an account is frozen.
+    event AccountFrozen(address indexed account);
+    /// @notice Emitted when an account is unfrozen.
+    event AccountUnfrozen(address indexed account);
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+    bytes32 public constant FREEZER_ROLE = keccak256("FREEZER_ROLE");
 
     // ================================================================
     // │                         Storage                              │
@@ -49,6 +60,8 @@ contract rwaUSD is
         uint8 decimals;
         /// @dev The maximum supply of the token, 0 if unlimited
         uint256 maxSupply;
+        /// @dev Tracks the frozen status of each account. Appended to preserve the layout of deployed proxies.
+        mapping(address => bool) isFrozen;
     }
 
     // keccak256(abi.encode(uint256(keccak256("multipli.storage.rwaUSD")) - 1)) & ~bytes32(uint256(0xff));
@@ -252,20 +265,68 @@ contract rwaUSD is
     }
 
     // ================================================================
+    // │                         Freezing                             │
+    // ================================================================
+
+    /// @notice Freezes an account, disallowing token operations involving it as sender, recipient, spender, or minter.
+    /// @dev Blocked operations: transfer (from/to), transferFrom (as spender or owner), burn (as holder),
+    ///      mint (as recipient), approve (as owner or spender). Enforcement lives in `_update` and `_approve`.
+    /// @dev Requires the caller to have the FREEZER_ROLE.
+    function freeze(address account) external onlyRole(FREEZER_ROLE) {
+        if (account == address(0)) revert RwaUsd__InvalidAddress(account);
+        if (account == address(this)) revert RwaUsd__InvalidAddress(account);
+
+        RwaUsdStorage storage $ = _getRwaUsdStorage();
+        if ($.isFrozen[account]) revert RwaUsd__AccountFrozen(account);
+
+        $.isFrozen[account] = true;
+
+        emit AccountFrozen(account);
+    }
+
+    /// @notice Unfreezes an account.
+    /// @dev Requires the caller to have the FREEZER_ROLE.
+    function unfreeze(address account) external onlyRole(FREEZER_ROLE) {
+        RwaUsdStorage storage $ = _getRwaUsdStorage();
+        if (!$.isFrozen[account]) revert RwaUsd__AccountNotFrozen(account);
+
+        $.isFrozen[account] = false;
+
+        emit AccountUnfrozen(account);
+    }
+
+    /// @notice Returns whether an account is frozen.
+    function isFrozen(address account) public view virtual returns (bool) {
+        return _getRwaUsdStorage().isFrozen[account];
+    }
+
+    /// @dev Reverts if `account` is frozen.
+    function _requireNotFrozen(address account) internal view {
+        if (_getRwaUsdStorage().isFrozen[account]) revert RwaUsd__AccountFrozen(account);
+    }
+
+    // ================================================================
     // │                            ERC20                             │
     // ================================================================
 
-    /// @dev Disallows sending, minting and burning if implementation is paused.
+    /// @dev Disallows sending, minting and burning if implementation is paused or any involved party is frozen.
+    /// @dev Checks from, to, and msg.sender — covers direct transfers, transferFrom/burnFrom spenders, and minters.
     function _update(address from, address to, uint256 value) internal virtual override {
         _requireNotPaused();
         if (to == address(this)) revert RwaUsd__InvalidRecipient(to);
+        _requireNotFrozen(from);
+        _requireNotFrozen(to);
+        _requireNotFrozen(msg.sender);
         super._update(from, to, value);
     }
 
-    /// @dev Disallows approving if implementation is paused.
+    /// @dev Disallows approving if implementation is paused or the owner or spender is frozen.
+    /// @dev Zero-value approvals (revocations) remain allowed while paused, but not while frozen.
     function _approve(address owner, address spender, uint256 value, bool emitEvent) internal virtual override {
         if (value != 0) _requireNotPaused();
         if (spender == address(this)) revert RwaUsd__InvalidRecipient(spender);
+        _requireNotFrozen(owner);
+        _requireNotFrozen(spender);
 
         super._approve(owner, spender, value, emitEvent);
     }

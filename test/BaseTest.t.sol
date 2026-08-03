@@ -17,6 +17,7 @@ contract RwaUsdBaseTest is Test {
     address internal s_minter = makeAddr("minter");
     address internal s_burner = makeAddr("burner");
     address internal s_pauser = makeAddr("pauser");
+    address internal s_freezer = makeAddr("freezer");
     address internal s_upgrader = makeAddr("upgrader");
     address internal s_alice = makeAddr("alice");
     address internal s_bob = makeAddr("bob");
@@ -49,6 +50,7 @@ contract RwaUsdBaseTest is Test {
         s_rwausd.grantRole(s_rwausd.MINTER_ROLE(), s_minter);
         s_rwausd.grantRole(s_rwausd.BURNER_ROLE(), s_burner);
         s_rwausd.grantRole(s_rwausd.PAUSER_ROLE(), s_pauser);
+        s_rwausd.grantRole(s_rwausd.FREEZER_ROLE(), s_freezer);
         vm.stopPrank();
     }
 }
