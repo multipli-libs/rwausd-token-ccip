@@ -18,12 +18,14 @@ This repository contains the `rwaUSD` upgradeable token contract for CCIP 1.6. C
 
 ## 1. Deployed Addresses
 
-| Network  | rwaUSD Token                                 | BurnMintTokenPool                            |
-| -------- | -------------------------------------------- | -------------------------------------------- |
-| Ethereum | `0x8Fcd23142047A3073ed332a0Ed07d1e8D2BD5177` | `0x7f49a388c6884c0d1706f7774e9a5575d100aa63` |
-| Base     | `0x272Ec977f4575df41cD47b1b254954E1C7972789` | `0x7Dc0496016d88c3EbA6d54D1514F24B3C9872894` |
-| Ink      | `0x2A66Bb2dA3AD1c854E79307F64b862DECD860D4c` | `0xd74FB32112b1eF5b4C428Fead8dA8d85A0019009` |
-| Monad    | `0x9aBb5aaAA4c63ABee1b6617843fd818c99C52c69` | **NOT YET DEPLOYED**                         |
+| Network   | rwaUSD Token                                 | BurnMintTokenPool                            |
+| --------- | -------------------------------------------- | -------------------------------------------- |
+| Ethereum  | `0x8Fcd23142047A3073ed332a0Ed07d1e8D2BD5177` | `0x7f49a388c6884c0d1706f7774e9a5575d100aa63` |
+| Base      | `0x272Ec977f4575df41cD47b1b254954E1C7972789` | `0x7Dc0496016d88c3EbA6d54D1514F24B3C9872894` |
+| Ink       | `0x2A66Bb2dA3AD1c854E79307F64b862DECD860D4c` | `0xd74FB32112b1eF5b4C428Fead8dA8d85A0019009` |
+| Monad     | `0x9aBb5aaAA4c63ABee1b6617843fd818c99C52c69` | **NOT YET DEPLOYED**                         |
+| Robinhood | `0xF83D9FA66162B887dCA53D246ca7c3706C9D6E2c` | **NOT YET DEPLOYED**                         |
+| X Layer   | `0xF83D9FA66162B887dCA53D246ca7c3706C9D6E2c` | **NOT YET DEPLOYED**                         |
 
 **Bridges (CCIP lanes):**
 
