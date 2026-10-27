@@ -198,7 +198,7 @@ contract rwaUSD is
         uint256 _maxSupply = maxSupply();
         uint256 _totalSupply = totalSupply();
 
-        if (_maxSupply != 0 && _totalSupply + amount > _maxSupply) {
+        if (_maxSupply != 0 && amount > _maxSupply - _totalSupply) {
             revert RwaUsd__MaxSupplyExceeded(_totalSupply + amount);
         }
 
@@ -213,6 +213,7 @@ contract rwaUSD is
     /// @dev calls public functions so this function does not require
     /// access controls. This is handled in the inner functions.
     function grantMintAndBurnRoles(address burnAndMinter) external {
+        require(burnAndMinter != address(0), "Recipient address is 0");
         grantRole(MINTER_ROLE, burnAndMinter);
         grantRole(BURNER_ROLE, burnAndMinter);
     }
